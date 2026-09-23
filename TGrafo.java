@@ -297,9 +297,9 @@ public class TGrafo {
             int tipoGrafo;
             int verticesLidos = 0;
 
-			int V = 0;
+			int V = 0; // Número de vértices
             int arestasLidas = 0;
-            int M = -1;
+            int M = -1; // Número de arestas
 
 			TGrafo grafo = null;
             
