@@ -33,6 +33,12 @@ public class Menu {
                 case 2:
                     // Gravar dados no arquivo grafo.txt
                     System.out.println("\nGravar dados em 'grafo.txt'");
+                    if (grafo == null) {
+                        System.out.print("Deve-se primeiro carregar um grafo.");
+                    } else {
+                        grafo.gravarArquivo("grafo.txt");
+                        System.out.print("Dados gravados em 'grafo.txt'.");
+                    }
                     break;
                 case 3:
                     // Inserir vértice
@@ -46,6 +52,9 @@ public class Menu {
                         System.out.print("\nInsira o nome do local: ");
                         String rotulo = sc.nextLine();
                         int qtd = grafo.insereV(coord, rotulo);
+
+                        // Cria aresta automaticamente com os vértices que estiverem a até 5km de distância
+                        grafo.conectarVizinhosProximos(qtd, 5.0);
 
                         System.out.print("Vertice " + qtd + " adicionado ao grafo.");
                     }
@@ -80,7 +89,7 @@ public class Menu {
                     break;
                 case 6:
                     // Mostrar conteúdo do arquivo
-                    System.out.println("\nExibindo conteúdo de 'grafo.txt'");
+                    TGrafo.mostrarConteudoArquivo("grafo.txt");
                     break;
                 case 7:
                     // Mostrar grafo

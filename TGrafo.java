@@ -1,5 +1,7 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 class TNo {
@@ -239,27 +241,51 @@ public class TGrafo {
 	    System.out.print("\n\nfim da impressao do grafo.\n");
 	}
 
+    private static final double RAIO_TERRA_KM = 6371.0;
+
     private float Haversine(Double lat1, Double lon1, Double lat2, Double lon2) {
-        return 0.0f;
+        double lat1Rad = Math.toRadians(lat1);
+        double lat2Rad = Math.toRadians(lat2);
+        double deltaLat = Math.toRadians(lat2 - lat1);
+        double deltaLon = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2)
+                + Math.cos(lat1Rad) * Math.cos(lat2Rad)
+                * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return (float) (RAIO_TERRA_KM * c);
     }
 
-    private float calcularPesoAresta(int v) {
-        // Vértice 0 = Minha Localização
-        // Calcula a distância entre 0 e v
+    private float calcularPesoAresta(int v, int w) {
 
-        String[] coordOrigem = pesoVert[0].split(" ");
-        String[] coordDestino = pesoVert[v].split(" ");
+        String[] coordV = pesoVert[v].split(" ");
+        String[] coordW = pesoVert[w].split(" ");
 
-        double lat1 = Double.parseDouble(coordOrigem[0]);
-        double lon1 = Double.parseDouble(coordOrigem[1]);
+        double lat1 = Double.parseDouble(coordV[0]);
+        double lon1 = Double.parseDouble(coordV[1]);
 
-        double lat2 = Double.parseDouble(coordDestino[0]);
-        double lon2 = Double.parseDouble(coordDestino[1]);
+        double lat2 = Double.parseDouble(coordW[0]);
+        double lon2 = Double.parseDouble(coordW[1]);
 
         // cálculo da distância...
-        float peso = Haversine(lat1, lon1, lat2, lon2);
+        return Haversine(lat1, lon1, lat2, lon2);
+    }
 
-        return peso;
+    // Testa a distância do vértice v contra todos os outros já existentes no grafo
+    // e cria automaticamente a aresta com o peso (distância) para os que estiverem
+    // a até "limiteKm" de distância. Usado ao inserir um vértice novo pelo menu.
+    public void conectarVizinhosProximos(int v, double limiteKm) {
+        for (int w = 0; w < n; w++) {
+            if (w == v) continue;
+            if (pesoVert[v] == null || pesoVert[w] == null) continue;
+
+            float distancia = calcularPesoAresta(v, w);
+
+            if (distancia <= limiteKm) {
+                insereA(v, w, distancia);
+            }
+        }
     }
 
     // Construir lista com base no grafo.txt
@@ -272,8 +298,11 @@ public class TGrafo {
             int verticesLidos = 0;
 
 			int V = 0;
+            int arestasLidas = 0;
+            int M = -1;
 
 			TGrafo grafo = null;
+            
 
 			while ((linha = br.readLine()) != null) {
 				if (contador == 0) {
@@ -307,13 +336,29 @@ public class TGrafo {
                     grafo.insereVArquivo(v, coordenadas, rotulo);
 
                     verticesLidos++;
+
+                 } else if (M == -1) {
+
+                     // Logo após os vértices vem a linha com o número de arestas (m)
+                     M = Integer.parseInt(linha.trim()); 
+
+                } else if (arestasLidas < M) {
+
+                     // Linha de aresta no formato "v w" (o peso é calculado via Haversine
+                     // a partir das coordenadas dos vértices, não é lido do arquivo)
+
+                    String[] valores = linha.trim().split("\\s+");
+                    int v = Integer.parseInt(valores[0]);
+                    int w = Integer.parseInt(valores[1]);
+
+                    float peso = grafo.calcularPesoAresta(v, w);
+                    grafo.insereA(v, w, peso);
+
+
+                    arestasLidas++;
                 }
 			}
 
-            for (int i = 1; i < verticesLidos; i++) {
-                float peso = grafo.calcularPesoAresta(i);
-                grafo.insereA(0, i, peso);
-            }
 
 			return grafo;
 
@@ -323,4 +368,54 @@ public class TGrafo {
 
 		return null;
 	}
+
+    // Grava o grafo atual (vértices e arestas) no arquivo, no mesmo formato usado na leitura
+    public void gravarArquivo(String arq) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(arq))) {
+            bw.write("3");
+            bw.newLine();
+
+            bw.write(String.valueOf(n));
+            bw.newLine();
+
+            for (int i = 0; i < n; i++) {
+                bw.write(i + " \"" + rotulo[i] + "\" \"" + pesoVert[i] + "\"");
+                bw.newLine();
+            }
+
+            bw.write(String.valueOf(m));
+            bw.newLine();
+
+            // Cada aresta está duplicada na lista de adjacência (v->w e w->v);
+            // grava só uma vez, quando o vizinho tem índice maior
+            for (int v = 0; v < n; v++) {
+                TNo no = adj[v];
+                while (no != null) {
+                    if (no.w > v) {
+                        bw.write(v + " " + no.w);
+                        bw.newLine();
+                    }
+                    no = no.prox;
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Erro ao gravar o arquivo: " + e.getMessage());
+        }
+    }
+
+    public static void mostrarConteudoArquivo(String arq) {
+        try (BufferedReader br = new BufferedReader(new FileReader(arq))) {
+            String linha;
+
+            System.out.println("\n----- Conteúdo de '" + arq + "' -----");
+            while ((linha = br.readLine()) != null) {
+                System.out.println(linha);
+            }
+            System.out.println("----- Fim do arquivo -----");
+
+        } catch (IOException e) {
+            System.out.println("Erro ao abrir o arquivo: " + e.getMessage());
+        }
+    }
 }
