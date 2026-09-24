@@ -11,19 +11,19 @@
 8 "Centro de Acolhida Adultos - Rua Emídio de Sousa, 41" "-23.518194 -46.509684"
 9 "Centro de Acolhida Adultos - Av. Alcântara Machado, 91" "-23.549735 -46.641488"
 10 "Centro de Acolhida Adultos - Av. Alcântara Machado, 725" "-23.550425 -46.635466"
-11 "Centro de Acolhida Adultos - Rua Iguara, 560" "-23.593900 -46.574277"
-12 "Centro de Acolhida Adultos - Rua Amadeu Gamberini, 124/125" "-23.487890 -46.458201"
+11 "Centro de Acolhida Adultos - Rua Iguara, 560" "-23.5939 -46.574277"
+12 "Centro de Acolhida Adultos - Rua Amadeu Gamberini, 124/125" "-23.48789 -46.458201"
 13 "Centro de Acolhida Adultos - Rua General Emérico Freire, 368" "-23.532328 -46.424896"
 14 "Centro de Acolhida Adultos - Av. Mateo Bei, 1409" "-23.591068 -46.509876"
-15 "Centro de Acolhida Adultos - Rua Alto Paraguai, 630" "-23.465580 -46.599177"
+15 "Centro de Acolhida Adultos - Rua Alto Paraguai, 630" "-23.46558 -46.599177"
 16 "Centro de Acolhida Adultos - Rua Doutor Olavo Egidio, 170" "-23.495737 -46.626166"
-17 "Centro de Acolhida Adultos - Rua Antonio dos Santos Neto, 40" "-23.503372 -46.625500"
+17 "Centro de Acolhida Adultos - Rua Antonio dos Santos Neto, 40" "-23.503372 -46.6255"
 18 "Centro de Acolhida Adultos - Rua São José do Rio Preto, 190" "-23.996921 -46.721918"
 19 "Centro de Acolhida Adultos - Rua Suzana Rodrigues, 135" "-23.900434 -46.752747"
 20 "Centro de Acolhida Adultos - Rua Teresa Francisca Martin, 201" "-23.521984 -46.623798"
 21 "Centro de Acolhida Adultos - Rua Comendador Nestor Pereira, 75 B" "-23.518477 -46.626011"
 22 "Centro de Acolhida Adultos - Rua Olarias, 476" "-23.519867 -46.627071"
-23 "Centro de Acolhida Adultos - Rua Pedro Vicente, 421" "-23.519220 -46.632013"
+23 "Centro de Acolhida Adultos - Rua Pedro Vicente, 421" "-23.51922 -46.632013"
 24 "Centro de Acolhida Adultos - Rua Eduardo Chaves, 127" "-23.518091 -46.645803"
 25 "Centro de Acolhida Adultos - Rua Deocleciana, 25 e 31" "-23.522661 -46.646197"
 26 "Centro de Acolhida Adultos - Rua Prates, 1101" "-23.518254 -46.647391"
@@ -42,33 +42,33 @@
 39 "Centro de Acolhida Adultos - Av. Miguel Yunes, 345" "-23.692332 -46.700824"
 40 "Centro de Acolhida Adultos - Av. Washington Luís, 88" "-23.903674 -46.721637"
 41 "Centro de Acolhida Adultos - Rua Cerqueira César, 290" "-23.893178 -46.728201"
-42 "CAE Mulheres - Av. Brigadeiro Luiz Antonio, 1645" "-23.565470 -46.647254"
-43 "CAE Mulheres - Rua Comendador Nestor Pereira, 77 B" "-23.518890 -46.626585"
+42 "CAE Mulheres - Av. Brigadeiro Luiz Antonio, 1645" "-23.56547 -46.647254"
+43 "CAE Mulheres - Rua Comendador Nestor Pereira, 77 B" "-23.51889 -46.626585"
 44 "CAE Mulheres - Rua Tobias Barreto, 1411" "-23.551728 -46.572112"
 45 "CAE Mulheres - Rua Joaquim Nabuco, 164" "-23.554238 -46.617937"
-46 "CAE Mulheres - Rua Antonio Camacho, 41" "-23.489690 -46.432594"
+46 "CAE Mulheres - Rua Antonio Camacho, 41" "-23.48969 -46.432594"
 47 "CAE Mulheres - Rua Cruz do Espírito Santo, 1162" "-23.530735 -46.415567"
 48 "CAE Mulheres - Rua Carmo do Rio Verde, 553" "-23.672542 -46.703529"
 49 "CAE Mulheres - Rua Doutor Cesar Castiglione Junior, 101" "-23.512355 -46.667989"
 50 "CAE Mulheres Trans - Rua Prates, 1101" "-23.518252 -46.647392"
-51 "CAE Mulheres Trans - Rua Doutor Zuquim, 1034/1036" "-23.497050 -46.626050"
-52 "CAE Mulheres Trans - Rua Igará Paraná, 94" "-23.692040 -46.701492"
-53 "CAE Homens Trans - Rua Carlos Escobar, 86" "-23.497505 -46.626300"
+51 "CAE Mulheres Trans - Rua Doutor Zuquim, 1034/1036" "-23.49705 -46.62605"
+52 "CAE Mulheres Trans - Rua Igará Paraná, 94" "-23.69204 -46.701492"
+53 "CAE Homens Trans - Rua Carlos Escobar, 86" "-23.497505 -46.6263"
 54 "CAE Família - Av. Marechal Eurico Gaspar Dutra, 1380" "-23.484819 -46.618989"
 55 "CAE Família - Rua Brazelisa Alves de Carvalho, 414" "-23.508145 -46.649355"
 56 "CAE Família - Alameda Barão de Limeira, 145" "-23.535624 -46.626522"
 57 "CAE Família - Alameda Barão de Limeira, 44" "-23.536172 -46.625711"
-58 "CAE Família - Rua da Abolição, 145" "-23.549047 -46.645000"
+58 "CAE Família - Rua da Abolição, 145" "-23.549047 -46.645"
 59 "CAE Família - Rua Joaquim Nabuco, 164" "-23.554238 -46.617937"
 60 "CAE Família - Rua Utaro Kanai, s/n" "-23.600124 -46.401895"
-61 "CAE Família - Avenida Interlagos, 295" "-23.692112 -46.704050"
+61 "CAE Família - Avenida Interlagos, 295" "-23.692112 -46.70405"
 62 "CAE Família - Rua Dom José de Barros, 28" "-23.539092 -46.639895"
 63 "CAE Família - Rua Barão de Campinas, 94" "-23.535793 -46.625939"
-64 "CAE Família - Rua dos Timbiras, 216" "-23.535982 -46.625340"
+64 "CAE Família - Rua dos Timbiras, 216" "-23.535982 -46.62534"
 65 "CAE Família - Rua Conselheiro Nébias, 309" "-23.537381 -46.630522"
 66 "CAE Família - Rua Comendador Nestor Pereira, 75B" "-23.519032 -46.626207"
 67 "CAE Família - Rua Brigadeiro Machado, 279" "-23.535122 -46.616753"
-68 "CAE Família - Rua Eduardo Chaves, 179" "-23.518294 -46.642150"
+68 "CAE Família - Rua Eduardo Chaves, 179" "-23.518294 -46.64215"
 69 "CAE Família - Rua Coronel Meireles, 740" "-23.512133 -46.523254"
 70 "CAE Idosos - Rua Antonio Vera Cruz, 213" "-23.503713 -46.629099"
 71 "CAE Idosos - Rua Barão de Campinas, 140" "-23.535406 -46.626015"
@@ -78,7 +78,316 @@
 75 "CAE Idosos - Alameda Barão de Limeira, 117" "-23.535853 -46.626357"
 76 "CAE Idosos - Rua Aurora, 409/411" "-23.537132 -46.641646"
 77 "CAE Idosos - Rua dos Timbiras, 483" "-23.537783 -46.641632"
-78 "CAE Idosos - Rua Aurora, 427" "-23.537168 -46.641740"
-79 "CAE Idosos - Rua Julio de Mesquita, 145" "-23.537511 -46.643740"
+78 "CAE Idosos - Rua Aurora, 427" "-23.537168 -46.64174"
+79 "CAE Idosos - Rua Julio de Mesquita, 145" "-23.537511 -46.64374"
 80 "CAE Idosos - Rua Madre Rita Amada de Jesus, 155" "-23.679771 -46.684981"
-0
+309
+0 9
+0 10
+0 31
+0 42
+0 58
+1 16
+1 17
+1 20
+1 21
+1 22
+1 23
+1 32
+1 51
+1 53
+1 70
+2 9
+2 10
+2 31
+2 42
+2 58
+3 37
+3 38
+3 39
+3 48
+3 61
+4 5
+4 6
+4 7
+4 20
+4 24
+4 25
+4 26
+4 27
+4 43
+4 50
+4 66
+5 6
+5 20
+5 24
+5 25
+5 26
+5 27
+5 28
+5 29
+5 30
+5 31
+5 43
+5 50
+6 7
+6 20
+6 24
+6 25
+6 26
+6 27
+6 43
+6 50
+6 66
+7 20
+7 24
+7 25
+7 26
+7 27
+7 43
+7 50
+7 66
+8 12
+8 13
+8 14
+8 15
+8 33
+8 34
+8 35
+8 36
+8 46
+8 47
+8 69
+9 10
+9 28
+9 29
+9 30
+9 31
+9 42
+9 58
+10 28
+10 29
+10 30
+10 31
+10 42
+10 58
+11 14
+11 44
+11 45
+11 59
+11 60
+12 13
+12 46
+12 47
+12 54
+13 46
+13 47
+13 54
+14 44
+14 45
+14 59
+14 60
+15 16
+15 17
+15 20
+15 21
+15 22
+15 23
+15 32
+15 51
+15 53
+15 54
+16 17
+16 20
+16 21
+16 22
+16 23
+16 32
+16 51
+16 53
+16 70
+17 20
+17 21
+17 22
+17 23
+17 32
+17 51
+17 53
+17 70
+18 19
+18 40
+18 41
+19 40
+19 41
+20 21
+20 22
+20 23
+20 24
+20 25
+20 26
+20 27
+20 32
+20 43
+20 50
+20 66
+21 22
+21 23
+21 24
+21 25
+21 26
+21 27
+21 32
+21 43
+21 50
+21 66
+22 23
+22 24
+22 25
+22 26
+22 27
+22 32
+22 43
+22 50
+22 66
+23 24
+23 25
+23 26
+23 27
+23 32
+23 43
+23 50
+23 66
+24 25
+24 26
+24 27
+24 43
+24 50
+24 66
+25 26
+25 27
+25 43
+25 50
+25 66
+26 27
+26 43
+26 50
+26 66
+27 43
+27 50
+27 66
+28 29
+28 30
+28 31
+28 42
+28 58
+29 30
+29 31
+29 42
+29 58
+30 31
+30 42
+30 58
+31 42
+31 58
+32 33
+32 34
+32 35
+32 36
+32 51
+32 53
+33 34
+33 35
+33 36
+34 35
+34 36
+35 36
+37 38
+37 39
+37 48
+37 61
+38 39
+38 48
+38 61
+39 48
+39 52
+39 61
+40 41
+42 58
+43 50
+43 66
+44 45
+44 59
+45 59
+46 47
+46 54
+47 54
+48 52
+48 61
+49 55
+49 68
+50 66
+51 53
+51 70
+52 61
+55 68
+56 57
+56 62
+56 63
+56 64
+56 65
+56 71
+56 75
+57 62
+57 63
+57 64
+57 65
+57 71
+57 75
+58 59
+60 69
+62 63
+62 64
+62 65
+62 71
+62 75
+63 64
+63 65
+63 71
+63 75
+64 65
+64 71
+64 75
+65 71
+65 75
+67 71
+67 75
+68 70
+70 71
+70 75
+71 75
+72 73
+72 74
+72 76
+72 77
+72 78
+72 79
+73 74
+73 76
+73 77
+73 78
+73 79
+74 76
+74 77
+74 78
+74 79
+75 76
+75 77
+75 78
+75 79
+76 77
+76 78
+76 79
+77 78
+77 79
+78 79
+79 80

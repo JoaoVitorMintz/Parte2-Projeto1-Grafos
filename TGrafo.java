@@ -41,7 +41,7 @@ public class TGrafo {
 
     */
     public void insereA( int v, int w, float peso) {
-        TNo novoNo = new TNo();
+        TNo noV = new TNo();
         TNo no = adj[v];
         TNo ant = null;
 
@@ -56,18 +56,19 @@ public class TGrafo {
         }
 
         // Cria o novo no para guardar w
-        novoNo.w = w;
-        novoNo.prox = no;
+        noV.w = w;
+        noV.pesoAres = peso;
+        noV.prox = no;
 
         // Atualiza a lista de v
         if (ant == null) {
             // Insere no inicio
-            adj[v] = novoNo;
+            adj[v] = noV;
         } else {
             // Insere em outra posição
-            ant.prox = novoNo;
+            ant.prox = noV;
         }
-
+        TNo noW = new TNo();
         no = adj[w];
         ant = null;
 
@@ -79,16 +80,17 @@ public class TGrafo {
             no = no.prox;
         }
 
-        novoNo.w = v;
-        novoNo.prox = no;
+        noW.w = v;
+        noW.pesoAres = peso;
+        noW.prox = no;
 
         if (ant == null) {
-            adj[w] = novoNo;
+            adj[w] = noW;
         } else {
-            ant.prox = novoNo;
+            ant.prox = noW;
         }
 
-        novoNo.pesoAres = peso;
+        
         // Aresta v-w conta apenas uma vez
         m++;
 	}
@@ -270,6 +272,12 @@ public class TGrafo {
 
         // cálculo da distância...
         return Haversine(lat1, lon1, lat2, lon2);
+    }
+
+    // Insere uma aresta entre v e w calculando o peso (distância) via Haversine
+    public void insereArestaCalculada(int v, int w) {
+        float peso = calcularPesoAresta(v, w);
+        insereA(v, w, peso);
     }
 
     // Testa a distância do vértice v contra todos os outros já existentes no grafo

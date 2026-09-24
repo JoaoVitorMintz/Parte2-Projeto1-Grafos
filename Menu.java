@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.InputMismatchException;
 
 public class Menu {
     public static void main(String[] args) {
@@ -17,10 +18,12 @@ public class Menu {
             System.out.println("5 - Remover aresta"); 
             System.out.println("6 - Mostrar conteúdo do arquivo"); 
             System.out.println("7 - Mostrar grafo"); 
+            System.out.println("8 - Inserir aresta");
             System.out.println("9 - Apresentar conexidade do grafo e o reduzido"); 
             System.out.println("10 - Encerrar aplicação");
             System.out.print("Insira sua opção: ");
 
+            try{
             resp = sc.nextInt();
 
             switch (resp) {
@@ -101,6 +104,20 @@ public class Menu {
                         grafo.show();
                     }
                     break;
+                case 8:
+                    // Inserir aresta
+                    System.out.println("\nInserir aresta");
+                    if (grafo == null) {
+                        System.out.print("Deve-se primeiro carregar um grafo.");
+                    } else {
+                        System.out.print("\nInsira um vértice: ");
+                        int v = sc.nextInt();
+                        System.out.print("\nInsira outro vértice: ");
+                        int w = sc.nextInt();
+                        grafo.insereArestaCalculada(v, w);
+                        System.out.print("Aresta " + v + "-" + w + " inserida (peso calculado via Haversine).");
+                    }
+                    break;
                 case 9:
                     // Apresentar conexidade do grafo e o reduzido
                     System.out.println("\nExibindo conexidade do grafo e o grafo reduzido");
@@ -118,6 +135,10 @@ public class Menu {
                 default:
                     System.out.println("\nOpção inválida.");
                     break;
+            }
+            } catch (InputMismatchException e) {
+                System.out.println("\nValor inválido, digite um número inteiro.");
+                sc.next(); // descarta o token inválido
             }
         }
     }
