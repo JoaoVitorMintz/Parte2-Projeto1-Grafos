@@ -56,9 +56,6 @@ public class Menu {
                         String rotulo = sc.nextLine();
                         int qtd = grafo.insereV(coord, rotulo);
 
-                        // Cria aresta automaticamente com os vértices que estiverem a até 5km de distância
-                        grafo.conectarVizinhosProximos(qtd, 5.0);
-
                         System.out.print("Vertice " + qtd + " adicionado ao grafo.");
                     }
                     break;

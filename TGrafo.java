@@ -167,6 +167,8 @@ public class TGrafo {
         this.rotulo = novoRotulo;
         this.pesoVert = novoPesoVert;
 
+        conectarVizinhosProximos(n-1, 5.0);
+
         return n-1;
     }
 
@@ -413,8 +415,8 @@ public class TGrafo {
                     String[] valores = linha.trim().split("\\s+");
                     int v = Integer.parseInt(valores[0]);
                     int w = Integer.parseInt(valores[1]);
+                    float peso = Float.parseFloat(valores[2]);
 
-                    float peso = grafo.calcularPesoAresta(v, w);
                     grafo.insereA(v, w, peso);
 
 
@@ -455,7 +457,7 @@ public class TGrafo {
                 TNo no = adj[v];
                 while (no != null) {
                     if (no.w > v) {
-                        bw.write(v + " " + no.w);
+                        bw.write(v + " " + no.w + " " + no.pesoAres);
                         bw.newLine();
                     }
                     no = no.prox;
