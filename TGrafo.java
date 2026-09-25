@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 class TNo {
     public int w; // Vértice que é adjacente ao elemento da lista
@@ -295,6 +297,59 @@ public class TGrafo {
             }
         }
     }
+    
+    
+    // Ex 9)
+    public void verificarConexidade() {
+    boolean[] visitado = new boolean[n];
+    List<List<Integer>> componentes = new ArrayList<>();
+
+    // Percorre todos os vértices do grafo
+    for (int i = 0; i < n; i++) {
+        if (!visitado[i]) {
+            List<Integer> compAtual = new ArrayList<>();
+            
+            // Instancia a Pilha com capacidade máxima para cobrir todas as inserções (2 * m + n)
+            Pilha pilha = new Pilha(2 * m + n + 1);
+
+            // Marca e empilha o vértice inicial
+            visitado[i] = true;
+            pilha.push(i);
+
+            while (!pilha.isEmpty()) {
+                int p = pilha.pop();
+                compAtual.add(p);
+
+                // Percorre os vizinhos de p
+                TNo no = adj[p];
+                
+                while (no != null) {
+                    if (!visitado[no.w]) {
+                        visitado[no.w] = true; // Marca imediatamente para não empilhar duplicados
+                        pilha.push(no.w);
+                    }
+                    no = no.prox;
+                }
+            }
+            componentes.add(compAtual);
+        }
+    }
+
+        // Exibição dos resultados da conexidade com pilha propria e DFS
+        System.out.println("\n--- ANÁLISE DE CONEXIDADE ---");
+        if (componentes.size() == 1) {
+            System.out.println("O grafo é CONEXO.");
+
+        } else {
+            System.out.println("O grafo é DESCONEXO.");
+            System.out.println("Quantidade de Componentes Conexas: " + componentes.size());
+
+            for (int k = 0; k < componentes.size(); k++) {
+                System.out.println("Componente " + (k + 1) + ": " + componentes.get(k));
+            }
+        }
+            System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
+        }
 
     // Construir lista com base no grafo.txt
     public static TGrafo buildGraph(String arq) {

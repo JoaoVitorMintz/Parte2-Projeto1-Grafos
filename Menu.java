@@ -126,6 +126,7 @@ public class Menu {
                     } else {
                         sc.nextLine(); // apenas limpa o ENTER da opção do menu
                         // Inserir aqui o método de calculo e exibição de Conexidade e grafo reduzido
+                        grafo.verificarConexidade();
                     }
                     break;
                 case 10:
