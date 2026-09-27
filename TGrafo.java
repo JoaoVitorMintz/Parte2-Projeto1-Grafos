@@ -1,3 +1,39 @@
+/*
+Alunos:
+João Vitor Garcia Aguiar Mintz 10440421
+Yan Andreotti dos Santos 10439766
+Giovanni Barreiro G. de Castro 10435745
+
+Conteúdo do arquivo:
+Arquivo do código do grafo não-direcionado com peso em aresta e vértice, cálculo de peso de aresta
+utilizando Haversine (cálculo de distância global usando longitude e latitude) e inserção do peso
+da aresta ao inserir vértice. É possível também inserir uma aresta e forçar um peso nela que tu quiser
+caso seja de interesse.
+
+Histórico de alterações realizadas:
+13/09 - João Vitor Garcia A Mintz - Adição do menu inicial.
+
+15/09 - João Vitor Garcia A Mintz - Criação e organização do menu, reestruturação do grafo em lista refazendo para
+ser não-direcionado, definido grafo lista para melhor utilização de memória, criação do método  de inserção, remoção,
+de vértices e arestas e criação, mas não desenvolvimento do método de calcular peso da aresta. Necessita tirar dúvida
+com o professor para saber como prosseguir
+
+17/09 - João Vitor Garcia A Mintz - Ajuste no grafo.txt para ter 80 vértices de abrigos em si
+
+23/09 - Yan Andreotti dos Santos - Adição dos métodos do menu 2, 3 e 6
+23/09 - João Vitor Garcia Aguiar Mintz - Ajuste de comentário
+
+24/09 - Yan Andreotti dos Santos - Arrumado método de ler arquivo, adição do método de adicionar aresta e tratamento
+de entrada inválida
+
+25/09 - Giovanni Barreiro G. de Castro - Realização do cálculo de conexidade e apresentação do grafo reduzido da 
+opção 9 do menu
+25/09 - Yan Andreotti dos Santos - Move cálculo de peso de aresta para InsereV, grafo.txt passa a salvar peso da
+aresta, gravarArquivo escreve o peso, buildGraph lê o peso do arquivo em vez de calcular
+
+27/09 - João Vitor Garcia Aguiar Mintz - Testes realizados, validação do código
+27/09 - Giovanni Barreiro G. de Castro - Envio do relatório dentro do github deste projeto do bimestre
+*/
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
