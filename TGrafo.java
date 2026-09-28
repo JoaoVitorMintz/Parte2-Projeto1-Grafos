@@ -39,8 +39,6 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 class TNo {
     public int w; // Vértice que é adjacente ao elemento da lista
@@ -131,11 +129,11 @@ public class TGrafo {
         
         // Aresta v-w conta apenas uma vez
         m++;
-	}
+    }
 
     // remove a aresta v-w dos dois sentidos, atualizando m uma única vez
-	public void removeA(int v, int w) {
-		TNo no = adj[v];
+    public void removeA(int v, int w) {
+        TNo no = adj[v];
         TNo ant = null;
 
         // TRECHO PARA REMOVER V -> W:
@@ -172,7 +170,7 @@ public class TGrafo {
         }
     
         m--;
-	}
+    }
 
     /*
     
@@ -209,8 +207,8 @@ public class TGrafo {
     }
 
     // Remove um vértice v do grafo NÃO-DIRIGIDO, junto com todas as arestas associadas
-	public int removeV(int v) {
-		TNo no = adj[v];
+    public int removeV(int v) {
+        TNo no = adj[v];
 
         // Remove todas as arestas ligadas ao vértice v
         while (no != null) {
@@ -247,7 +245,7 @@ public class TGrafo {
         this.pesoVert = novoPesoVert;
 
         return n-1;
-	}
+    }
 
     // Caso seja a inserção do arquivo
     private void insereVArquivo(int v, String coordenadas, String rotulo) {
@@ -269,19 +267,19 @@ public class TGrafo {
 
     // Exibir lista
     public void show() {
-	    System.out.print("n: " + n);
-	    System.out.print("\nm: " + m + "\n");
-	    for( int i=0; i < n; i++){
-	    	System.out.print("\n" + i + ": ");
-	        // Percorre a lista na posição i do vetor
-	        TNo no = adj[i];
-	        while( no != null ){
-	        	System.out.print(no.w + " ");
-	            no = no.prox;
-	        }
-	    }
-	    System.out.print("\n\nfim da impressao do grafo.\n");
-	}
+        System.out.print("n: " + n);
+        System.out.print("\nm: " + m + "\n");
+        for(int i=0; i < n; i++){
+            System.out.print("\n" + i + ": ");
+            // Percorre a lista na posição i do vetor
+            TNo no = adj[i];
+            while( no != null ){
+                System.out.print(no.w + " ");
+                no = no.prox;
+            }
+        }
+        System.out.print("\n\nfim da impressao do grafo.\n");
+    }
 
     private static final double RAIO_TERRA_KM = 6371.0;
 
@@ -335,79 +333,91 @@ public class TGrafo {
             }
         }
     }
-    
-    
+
     // Ex 9)
     public void verificarConexidade() {
-    boolean[] visitado = new boolean[n];
-    List<List<Integer>> componentes = new ArrayList<>();
+        boolean[] visitado = new boolean[n];
+        
+        // Matriz nativa para guardar as componentes: [indice_componente][vertice]
+        int[][] componentes = new int[n][n];
+        // Vetor auxiliar para guardar o tamanho de cada componente
+        int[] tamComponentes = new int[n];
+        int numComponentes = 0;
 
-    // Percorre todos os vértices do grafo
-    for (int i = 0; i < n; i++) {
-        if (!visitado[i]) {
-            List<Integer> compAtual = new ArrayList<>();
-            
-            // Instancia a Pilha com capacidade máxima para cobrir todas as inserções (2 * m + n)
-            Pilha pilha = new Pilha(2 * m + n + 1);
+        // Percorre todos os vértices do grafo
+        for (int i = 0; i < n; i++) {
+            if (!visitado[i]) {
+                // Instancia a Pilha com capacidade máxima para cobrir todas as inserções (2 * m + n)
+                Pilha pilha = new Pilha(2 * m + n + 1);
 
-            // Marca e empilha o vértice inicial
-            visitado[i] = true;
-            pilha.push(i);
+                // Marca e empilha o vértice inicial
+                visitado[i] = true;
+                pilha.push(i);
 
-            while (!pilha.isEmpty()) {
-                int p = pilha.pop();
-                compAtual.add(p);
+                while (!pilha.isEmpty()) {
+                    int p = pilha.pop();
+                    
+                    // Adiciona p na matriz da componente atual usando um vetor nativo
+                    componentes[numComponentes][tamComponentes[numComponentes]] = p;
+                    tamComponentes[numComponentes]++;
 
-                // Percorre os vizinhos de p
-                TNo no = adj[p];
-                
-                while (no != null) {
-                    if (!visitado[no.w]) {
-                        visitado[no.w] = true; // Marca imediatamente para não empilhar duplicados
-                        pilha.push(no.w);
+                    // Percorre os vizinhos de p
+                    TNo no = adj[p];
+                    
+                    while (no != null) {
+                        if (!visitado[no.w]) {
+                            visitado[no.w] = true; // Marca imediatamente para não empilhar duplicados
+                            pilha.push(no.w);
+                        }
+                        no = no.prox;
                     }
-                    no = no.prox;
                 }
+                numComponentes++;
             }
-            componentes.add(compAtual);
         }
-    }
 
         // Exibição dos resultados da conexidade com pilha propria e DFS
         System.out.println("\n--- ANÁLISE DE CONEXIDADE ---");
-        if (componentes.size() == 1) {
+        if (numComponentes == 1) {
             System.out.println("O grafo é CONEXO.");
 
         } else {
             System.out.println("O grafo é DESCONEXO.");
-            System.out.println("Quantidade de Componentes Conexas: " + componentes.size());
+            System.out.println("Quantidade de Componentes Conexas: " + numComponentes);
 
-            for (int k = 0; k < componentes.size(); k++) {
-                System.out.println("Componente " + (k + 1) + ": " + componentes.get(k));
+            for (int k = 0; k < numComponentes; k++) {
+                System.out.print("Componente " + (k + 1) + ": [");
+                for (int j = 0; j < tamComponentes[k]; j++) {
+                    System.out.print(componentes[k][j]);
+                    if (j < tamComponentes[k] - 1) {
+                        System.out.print(", ");
+                    }
+                }
+                System.out.println("]");
             }
         }
-            System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
-        }
+        System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
+    }
 
     // Construir lista com base no grafo.txt
     public static TGrafo buildGraph(String arq) {
-		try (BufferedReader br = new BufferedReader(new FileReader(arq))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(arq))) {
 
-			String linha;
-			int contador = 0;
+            String linha;
+            int contador = 0;
             int tipoGrafo;
             int verticesLidos = 0;
 
-			int V = 0; // Número de vértices
+            int V = 0; // Número de vértices
             int arestasLidas = 0;
             int M = -1; // Número de arestas
 
-			TGrafo grafo = null;
+            TGrafo grafo = null;
             
 
-			while ((linha = br.readLine()) != null) {
-				if (contador == 0) {
-					// Tipo grafo
+            while ((linha = br.readLine()) != null) {
+                if (contador == 0) {
+                    // Tipo grafo
                     tipoGrafo = Integer.parseInt(linha);
 
                     if (tipoGrafo != 3) {
@@ -458,17 +468,17 @@ public class TGrafo {
 
                     arestasLidas++;
                 }
-			}
+            }
 
 
-			return grafo;
+            return grafo;
 
-		} catch (IOException e) {
-			System.out.print("Erro ao abrir o arquivo: " + e.getMessage());
-		}
+        } catch (IOException e) {
+            System.out.print("Erro ao abrir o arquivo: " + e.getMessage());
+        }
 
-		return null;
-	}
+        return null;
+    }
 
     // Grava o grafo atual (vértices e arestas) no arquivo, no mesmo formato usado na leitura
     public void gravarArquivo(String arq) {
