@@ -34,7 +34,7 @@ opção 9 do menu
 aresta, gravarArquivo escreve o peso, buildGraph lê o peso do arquivo em vez de calcular
 
 27/09 - João Vitor Garcia Aguiar Mintz - Testes realizados, validação do código
-27/09 - Giovanni Barreiro G. de Castro - Envio do relatório dentro do github deste projeto do bimestre
+28/09 - Yan Andreotti dos Santos - Envio do relatório dentro do github deste projeto do bimestre
 */
 import java.util.InputMismatchException;
 import java.util.Scanner;
