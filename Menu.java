@@ -57,8 +57,9 @@ public class Menu {
             System.out.println("6 - Mostrar conteúdo do arquivo"); 
             System.out.println("7 - Mostrar grafo"); 
             System.out.println("8 - Inserir aresta");
-            System.out.println("9 - Apresentar conexidade do grafo e o reduzido"); 
-            System.out.println("10 - Encerrar aplicação");
+            System.out.println("9 - Apresentar conexidade do grafo e o reduzido");
+            System.out.println("10 - Apresentar o caminho mínimo para o grafo");
+            System.out.println("11 - Encerrar aplicação");
             System.out.print("Insira sua opção: ");
 
             try{
@@ -165,6 +166,20 @@ public class Menu {
                     }
                     break;
                 case 10:
+                    // Algoritmo de Dijkstra (Caminho Mínimo)
+                    System.out.println("\n=== Algoritmo de Dijkstra ===");
+                    if (grafo == null) {
+                        System.out.println("Deve-se primeiro carregar um grafo.");
+                    } else {
+                        System.out.print("Insira o vértice de ORIGEM: ");
+                        int origem = sc.nextInt();
+                        System.out.print("Insira o vértice de DESTINO (ou -1 para calcular até todos): ");
+                        int destino = sc.nextInt();
+
+                        grafo.dijkstra(origem, destino);
+                    }
+                    break;
+                case 11:
                     System.out.println("\nEncerrando aplicação.");
                     sc.close();
                     return;

@@ -399,6 +399,98 @@ public class TGrafo {
         System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
     }
 
+    // Exercício Implementação Dijkstra
+    public void dijkstra(int origem, int destino) {
+        if (origem < 0 || origem >= n) {
+            System.out.println("Vértice de origem inválido!"); // Vertice nao existe
+            return;
+        }
+
+        double[] dist = new double[n];
+        boolean[] visitado = new boolean[n];
+        int[] antecessor = new int[n];
+
+        for (int i = 0; i < n; i++) {
+            dist[i] = 10000.0; // Definindo como 10k Km para ser o valor maximo
+            visitado[i] = false;
+            antecessor[i] = -1;
+        }
+
+        dist[origem] = 0;
+
+        for (int i = 0; i < n - 1; i++) {
+            // Seleciona o vértice não visitado de menor distância
+            int u = -1;
+            double minDist = 10000.0;
+
+            for (int j = 0; j < n; j++) {
+                if (!visitado[j] && dist[j] < minDist) {
+                    minDist = dist[j];
+                    u = j;
+                }
+            }
+
+            if (u == -1) break; // Vértices restantes inacessíveis
+
+            visitado[u] = true;
+
+            if (u == destino) break; // Acaba caso chegue no destino antes
+
+            // Atualiza distâncias dos vizinhos
+            TNo no = adj[u];
+            while (no != null) {
+                int v = no.w;
+                float peso = no.pesoAres;
+
+                if (!visitado[v] && dist[u] != 10000.0 && (dist[u] + peso < dist[v])) {
+                    dist[v] = dist[u] + peso;
+                    antecessor[v] = u;
+                }
+                no = no.prox;
+            }
+        }
+
+        // Imprime Resultados Dijkstra
+        System.out.println("\n=== RESULTADO DO ALGORITMO DE DIJKSTRA ===");
+        if (destino >= 0 && destino < n) {
+            if (dist[destino] == 10000.0) {
+                System.out.println("Não existe caminho de " + origem + " para " + destino + ".");
+            } else {
+                System.out.printf("Distância mínima de %d para %d: %.2f km\n", origem, destino, dist[destino]);
+                imprimirCaminho(origem, destino, antecessor);
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                if (dist[i] == Float.MAX_VALUE) {
+                    System.out.println("Origem " + origem + " -> Vértice " + i + ": Inalcançável");
+                } else {
+                    System.out.printf("Origem %d -> Vértice %d (%s): Distância = %.2f km\n", 
+                                      origem, i, (rotulo[i] != null ? rotulo[i] : "Sem rótulo"), dist[i]);
+                }
+            }
+        }
+    }
+
+    private void imprimirCaminho(int origem, int destino, int[] antecessor) {
+        int[] caminho = new int[n];
+        int tam = 0;
+        int curr = destino;
+
+        while (curr != -1) {
+            caminho[tam++] = curr;
+            curr = antecessor[curr];
+        }
+
+        System.out.print("Caminho percorrido: ");
+        for (int i = tam - 1; i >= 0; i--) {
+            int v = caminho[i];
+            String r = (rotulo[v] != null) ? rotulo[v] : String.valueOf(v);
+            System.out.print(r + " (v" + v + ")");
+            if (i > 0) System.out.print(" -> ");
+        }
+        System.out.println();
+    }
+
     // Construir lista com base no grafo.txt
     public static TGrafo buildGraph(String arq) {
         try (BufferedReader br = new BufferedReader(new FileReader(arq))) {
