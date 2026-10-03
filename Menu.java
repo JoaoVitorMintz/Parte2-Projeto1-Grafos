@@ -43,13 +43,14 @@ public class Menu {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
-        TGrafo grafo = null;
+        // TGrafo grafo = null;
+        TGrafoD grafo = null;
         int resp;
 
         while (true) {
 
             System.out.println("\n===== MENU ====="); 
-            System.out.println("1 - Ler dados de grafo.txt");
+            System.out.println("1 - Ler dados de grafo*.txt");
             System.out.println("2 - Gravar dados no arquivo grafo.txt"); 
             System.out.println("3 - Inserir vértice"); 
             System.out.println("4 - Remover vértice"); 
@@ -68,8 +69,9 @@ public class Menu {
             switch (resp) {
                 case 1:
                     // Ler dados de grafo.txt
-                    System.out.println("\nLendo dados de 'grafo.txt'");
-                    grafo = TGrafo.buildGraph("grafo.txt");
+                    System.out.println("\nLendo dados de 'grafo3.txt'");
+                    // grafo = TGrafoD.buildGraph("grafo2.txt");
+                    grafo = TGrafoD.buildGraph("grafo3.txt");
                     System.out.print("Leitura completa!");
                     break;
                 case 2:
