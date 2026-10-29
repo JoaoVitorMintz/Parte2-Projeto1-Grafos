@@ -470,9 +470,8 @@ public class TGrafoD {
 
             String linha;
             int contador = 0;
-            int tipoGrafo;
             int verticesLidos = 0;
-
+            int tipoGrafo = 0;
             int V = 0; // Número de vértices
             int arestasLidas = 0;
             int M = -1; // Número de arestas

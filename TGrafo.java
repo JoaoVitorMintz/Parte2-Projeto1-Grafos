@@ -39,6 +39,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 class TNo {
     public int w; // Vértice que é adjacente ao elemento da lista
@@ -69,6 +71,58 @@ public class TGrafo {
         this.adj = adjac;
         this.rotulo = rotulos;
         this.pesoVert = pesosVert;
+    }
+
+    // Acesso de leitura usado pela visualização web sem expor as listas internas.
+    public int getQuantidadeVertices() {
+        return n;
+    }
+
+    public int getQuantidadeArestas() {
+        return m;
+    }
+
+    public String getRotulo(int vertice) {
+        validarVertice(vertice);
+        return rotulo[vertice];
+    }
+
+    public String getCoordenadas(int vertice) {
+        validarVertice(vertice);
+        return pesoVert[vertice];
+    }
+
+    private void validarVertice(int vertice) {
+        if (vertice < 0 || vertice >= n) {
+            throw new IndexOutOfBoundsException("Vértice inválido: " + vertice);
+        }
+    }
+
+    // Retorna cada aresta não direcionada uma única vez.
+    public List<ArestaInfo> listarArestas() {
+        List<ArestaInfo> arestas = new ArrayList<>();
+        for (int v = 0; v < n; v++) {
+            TNo no = adj[v];
+            while (no != null) {
+                if (no.w > v) {
+                    arestas.add(new ArestaInfo(v, no.w, no.pesoAres));
+                }
+                no = no.prox;
+            }
+        }
+        return arestas;
+    }
+
+    public static class ArestaInfo {
+        public final int origem;
+        public final int destino;
+        public final float peso;
+
+        public ArestaInfo(int origem, int destino, float peso) {
+            this.origem = origem;
+            this.destino = destino;
+            this.peso = peso;
+        }
     }
 
     /*
@@ -399,11 +453,22 @@ public class TGrafo {
         System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
     }
 
-    // Exercício Implementação Dijkstra
-    public void dijkstra(int origem, int destino) {
+    // Resultado estruturado do Dijkstra, para outras partes do projeto reutilizarem o cálculo.
+    public static class ResultadoDijkstra {
+        public final double[] distancias;
+        public final int[] antecessores;
+
+        private ResultadoDijkstra(double[] distancias, int[] antecessores) {
+            this.distancias = distancias;
+            this.antecessores = antecessores;
+        }
+    }
+
+    // Calcula as menores distâncias e os antecessores a partir da origem.
+    // Este é o mesmo algoritmo usado pelo menu e pela visualização HTML.
+    public ResultadoDijkstra calcularDijkstra(int origem) {
         if (origem < 0 || origem >= n) {
-            System.out.println("Vértice de origem inválido!"); // Vertice nao existe
-            return;
+            throw new IllegalArgumentException("Vértice de origem inválido: " + origem);
         }
 
         double[] dist = new double[n];
@@ -411,17 +476,14 @@ public class TGrafo {
         int[] antecessor = new int[n];
 
         for (int i = 0; i < n; i++) {
-            dist[i] = 10000.0; // Definindo como 10k Km para ser o valor maximo
-            visitado[i] = false;
+            dist[i] = Double.POSITIVE_INFINITY;
             antecessor[i] = -1;
         }
+        dist[origem] = 0.0;
 
-        dist[origem] = 0;
-
-        for (int i = 0; i < n - 1; i++) {
-            // Seleciona o vértice não visitado de menor distância
+        for (int i = 0; i < n; i++) {
             int u = -1;
-            double minDist = 10000.0;
+            double minDist = Double.POSITIVE_INFINITY;
 
             for (int j = 0; j < n; j++) {
                 if (!visitado[j] && dist[j] < minDist) {
@@ -429,31 +491,37 @@ public class TGrafo {
                     u = j;
                 }
             }
-
-            if (u == -1) break; // Vértices restantes inacessíveis
-
+            if (u == -1) break; // Os vértices restantes são inalcançáveis.
             visitado[u] = true;
 
-            if (u == destino) break; // Acaba caso chegue no destino antes
-
-            // Atualiza distâncias dos vizinhos
             TNo no = adj[u];
             while (no != null) {
                 int v = no.w;
-                float peso = no.pesoAres;
-
-                if (!visitado[v] && dist[u] != 10000.0 && (dist[u] + peso < dist[v])) {
-                    dist[v] = dist[u] + peso;
+                double novaDistancia = dist[u] + no.pesoAres;
+                if (!visitado[v] && novaDistancia < dist[v]) {
+                    dist[v] = novaDistancia;
                     antecessor[v] = u;
                 }
                 no = no.prox;
             }
         }
+        return new ResultadoDijkstra(dist, antecessor);
+    }
 
-        // Imprime Resultados Dijkstra
+    // Exercício Implementação Dijkstra (interface de console mantida).
+    public void dijkstra(int origem, int destino) {
+        if (origem < 0 || origem >= n) {
+            System.out.println("Vértice de origem inválido!");
+            return;
+        }
+
+        ResultadoDijkstra resultado = calcularDijkstra(origem);
+        double[] dist = resultado.distancias;
+        int[] antecessor = resultado.antecessores;
+
         System.out.println("\n=== RESULTADO DO ALGORITMO DE DIJKSTRA ===");
         if (destino >= 0 && destino < n) {
-            if (dist[destino] == 10000.0) {
+            if (Double.isInfinite(dist[destino])) {
                 System.out.println("Não existe caminho de " + origem + " para " + destino + ".");
             } else {
                 System.out.printf("Distância mínima de %d para %d: %.2f km\n", origem, destino, dist[destino]);
@@ -461,11 +529,12 @@ public class TGrafo {
             }
         } else {
             for (int i = 0; i < n; i++) {
-                if (dist[i] == Float.MAX_VALUE) {
-                    System.out.println("Origem " + origem + " -> Vértice " + i + ": Inalcançável");
+                if (Double.isInfinite(dist[i])) {
+                    System.out.printf("Origem %d -> Vértice %d (%s): Inalcançável\n",
+                            origem, i, (rotulo[i] != null ? rotulo[i] : "Sem rótulo"));
                 } else {
-                    System.out.printf("Origem %d -> Vértice %d (%s): Distância = %.2f km\n", 
-                                      origem, i, (rotulo[i] != null ? rotulo[i] : "Sem rótulo"), dist[i]);
+                    System.out.printf("Origem %d -> Vértice %d (%s): Distância = %.2f km\n",
+                            origem, i, (rotulo[i] != null ? rotulo[i] : "Sem rótulo"), dist[i]);
                 }
             }
         }

@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AcolheSP — Grafo visual</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--text:#182235;--muted:#64748b;--line:#d9e2ef;--blue:#2563eb;--purple:#7c3aed}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:1600px;margin:auto;padding:22px}
+h1{margin:0 0 4px;font-size:clamp(24px,3vw,34px)}
+h2{font-size:18px;margin:0 0 12px}
+.sub{margin:0 0 18px;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 5px 20px #1e293b0a}
+.controls{display:grid;grid-template-columns:1fr 1fr auto auto;gap:10px;align-items:end}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.field input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;font:inherit}
+.button{border:0;border-radius:10px;padding:11px 15px;font:inherit;font-weight:700;cursor:pointer;background:var(--blue);color:white}
+.button.secondary{background:#e8edf5;color:#243349}
+.button:disabled{opacity:.55;cursor:wait}
+.status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#eff6ff;color:#1d4ed8}
+.status.error{background:#fef2f2;color:#b91c1c}
+.status.warn{background:#fffbeb;color:#92400e}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-width:130px}
+.stat strong{display:block;font-size:21px}
+.stat span{font-size:12px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(280px,1fr);gap:16px;margin-top:16px}
+.graphHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.tabs{display:flex;background:#eef2f7;padding:4px;border-radius:10px;gap:3px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;padding:8px 11px;border-radius:7px;cursor:pointer;color:#475569;font:inherit}
+.tabs button.active{background:white;color:#1d4ed8;font-weight:800;box-shadow:0 1px 4px #0f172a14}
+.graphWrap{position:relative}
+svg{display:block;width:100%;height:min(72vh,850px);min-height:520px;background:linear-gradient(#fff,#f8fafc);border:1px solid var(--line);border-radius:12px;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+svg.grabbing{cursor:grabbing}
+.zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.zoomBtns button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:#fff;color:#334155;cursor:pointer;font:700 17px/1 system-ui;box-shadow:0 1px 4px #0f172a14}
+.zoomBtns button:hover{background:#f1f5f9}
+.edge{stroke:#7b8da5;stroke-width:1.1;opacity:.38;vector-effect:non-scaling-stroke;fill:none}
+.edge.faint{stroke-width:1;opacity:.07}
+.edge.tree{stroke:#94a3b8;stroke-width:1.5;opacity:.8}
+.edge.neighbor{stroke:#475569;stroke-width:1.8;opacity:.9}
+.edge.path{stroke:#2563eb;stroke-width:3.4;opacity:1}
+.node{stroke:white;stroke-width:1.8;cursor:pointer;vector-effect:non-scaling-stroke}
+.node.source{stroke:#7c3aed;stroke-width:3}
+.node.nb{stroke:#111827;stroke-width:2}
+.node.selected{stroke:#111827;stroke-width:3.2}
+.dim{opacity:.22}
+.node-label{font-weight:800;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.small-label{font-size:11px;fill:#263449;text-anchor:middle;paint-order:stroke;stroke:white;stroke-width:3;stroke-linejoin:round;pointer-events:none}
+.halo{fill-opacity:.08;stroke-opacity:.4;stroke-width:1.3;stroke-dasharray:5 5;vector-effect:non-scaling-stroke;pointer-events:none}
+.ring{fill:none;stroke:#cbd5e1;stroke-width:1;stroke-dasharray:3 6;vector-effect:non-scaling-stroke;pointer-events:none}
+.deco-label{font-size:14px;font-weight:700;fill:#475569;text-anchor:middle;paint-order:stroke;stroke:white;stroke-width:4;stroke-linejoin:round;pointer-events:none}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:12px;background:#f8fafc}
+.note{font-size:12px;color:var(--muted);margin:10px 0 0}
+.side{display:flex;flex-direction:column;gap:16px}
+.list{display:flex;flex-direction:column;gap:8px;max-height:440px;overflow:auto}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer}
+.item:hover{background:#f8fafc}
+.item strong{display:block}
+.muted{font-size:12px;color:var(--muted);margin-top:3px}
+.select{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;background:white;font:inherit}
+.colorDot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+.pathBox{margin-top:10px;padding:10px;background:#eff6ff;border-radius:9px;color:#1e40af;overflow-wrap:anywhere}
+.warning{background:#fffbeb;color:#92400e;padding:10px;border-radius:9px;font-size:12px;margin-top:10px}
+.legendBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:#475569;background:#f8fafc;padding:7px 9px;border:1px solid var(--line);border-radius:9px}
+.legendBtns input{accent-color:var(--blue)}
+.headTabs{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+#map{width:100%;height:min(72vh,850px);min-height:520px;border:1px solid var(--line);border-radius:12px;z-index:0;cursor:grab}
+#map.is-panning,#map.is-panning *{cursor:grabbing!important}
+.zoomBtns{z-index:1200}
+.pinwrap{background:none;border:0}
+.pin{width:24px;height:24px;border-radius:50%;border:2px solid #fff;color:#fff;font:800 10px/20px system-ui,sans-serif;text-align:center;box-shadow:0 1px 5px #0008;cursor:pointer}
+.pin.src{width:28px;height:28px;margin:-2px;line-height:24px;border-color:#7c3aed;box-shadow:0 0 0 3px #7c3aed66}
+.pin.nb{border-color:#111827}
+.pin.sel{border-color:#111827;box-shadow:0 0 0 4px #11182766}
+.pin.dim{opacity:.3}
+.leaflet-tooltip.kmtip{background:#2563eb;color:#fff;border:0;font-weight:700;padding:2px 6px;box-shadow:0 1px 4px #0006}
+.leaflet-tooltip.kmtip::before{display:none}
+#fullscreenMap{white-space:nowrap}
+body.map-fullscreen{overflow:hidden!important}
+body.map-fullscreen main{max-width:none!important;margin:0!important;padding:0!important}
+body.map-fullscreen main>h1,body.map-fullscreen main>.sub,body.map-fullscreen main>section.panel{display:none!important}
+body.map-fullscreen .layout{display:block!important;position:fixed!important;inset:0!important;z-index:10000!important;margin:0!important}
+body.map-fullscreen .layout>aside{display:none!important}
+body.map-fullscreen .layout>section.panel{display:block!important;position:fixed!important;inset:0!important;z-index:10000!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
+body.map-fullscreen .graphHeader{position:fixed!important;top:8px!important;right:8px!important;z-index:10003!important;justify-content:flex-end!important;pointer-events:none!important}
+body.map-fullscreen .graphHeader h2{display:none!important}
+body.map-fullscreen .graphHeader .headTabs{display:flex!important;position:fixed!important;inset:0!important;z-index:10003!important;justify-content:flex-end!important;align-items:flex-start!important;pointer-events:none!important}
+body.map-fullscreen .graphHeader .headTabs .tabs{display:none!important}
+body.map-fullscreen #fullscreenMap{display:block!important;position:fixed!important;top:10px!important;right:10px!important;z-index:10004!important;pointer-events:auto!important;background:#1f2937!important;color:white!important;box-shadow:0 2px 12px #0004!important}
+body.map-fullscreen .graphWrap{position:fixed!important;inset:0!important;margin:0!important;padding:0!important;z-index:10001!important}
+body.map-fullscreen #map{position:absolute!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;min-height:0!important;max-height:none!important;border:0!important;border-radius:0!important}
+body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #legend,body.map-fullscreen .legendBtns,body.map-fullscreen .note,body.map-fullscreen .warning{display:none!important}
+@media(max-width:900px){main{padding:12px}.layout{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.controls button{grid-column:auto}svg{min-height:480px;height:65vh}#map{min-height:480px;height:65vh}}
+@media(max-width:520px){.controls{grid-template-columns:1fr}.controls button{width:100%}.stat{flex:1}svg{min-height:420px;height:60vh}#map{min-height:420px;height:60vh}.headTabs{width:100%}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Visualização do grafo do AcolheSP</h1>
+  <p class="sub">Mostra os vértices e as arestas retornados pelo backend, a coloração gulosa e os caminhos calculados por Dijkstra.</p>
+  <section class="panel">
+    <div class="controls">
+      <div class="field"><label for="lat">Latitude da origem</label><input id="lat" type="number" step="any" value="-23.5505"></div>
+      <div class="field"><label for="lng">Longitude da origem</label><input id="lng" type="number" step="any" value="-46.6333"></div>
+      <button id="geo" class="button secondary">Usar minha localização</button>
+      <button id="load" class="button">Construir grafo</button>
+    </div>
+    <div id="status" class="status">Informe as coordenadas e clique em “Construir grafo”.</div>
+    <div class="stats">
+      <div class="stat"><strong id="nVertices">—</strong><span>vértices</span></div>
+      <div class="stat"><strong id="nArestas">—</strong><span>arestas</span></div>
+      <div class="stat"><strong id="nCores">—</strong><span>cores usadas</span></div>
+      <div class="stat"><strong id="nReachable">—</strong><span>abrigos alcançáveis</span></div>
+    </div>
+  </section>
+  <div class="layout">
+    <section class="panel">
+      <div class="graphHeader">
+        <h2>Grafo construído pelo backend</h2>
+        <div class="headTabs">
+          <div class="tabs" aria-label="Tipo de visualização">
+            <button class="active" data-view="mapa">Mapa real</button>
+            <button data-view="diagrama">Diagrama</button>
+          </div>
+          <div class="tabs" aria-label="Modo da visualização">
+            <button class="active" data-mode="grafo">Grafo completo</button>
+            <button data-mode="coloracao">Coloração</button>
+            <button data-mode="dijkstra">Dijkstra</button>
+          </div>
+          <button id="fullscreenMap" type="button" class="button secondary" aria-pressed="false">⛶ Tela cheia do mapa</button>
+        </div>
+      </div>
+      <div class="graphWrap">
+        <div id="map" role="application" aria-label="Mapa com os abrigos e as arestas"></div>
+        <svg id="graph" style="display:none" viewBox="0 0 1200 900" role="img" aria-label="Grafo dos abrigos e da origem"></svg>
+        <div class="zoomBtns">
+          <button id="zin" title="Aproximar" aria-label="Aproximar">+</button>
+          <button id="zout" title="Afastar" aria-label="Afastar">−</button>
+          <button id="zfit" title="Ajustar à tela" aria-label="Ajustar à tela">⤢</button>
+        </div>
+      </div>
+      <div id="legend" class="legend"></div>
+      <div class="legendBtns">
+        <label class="toggle"><input id="showLabels" type="checkbox" checked> Mostrar o número de cada abrigo</label>
+        <label class="toggle"><input id="focusEdges" type="checkbox" checked> Destacar o vértice selecionado e seus vizinhos</label>
+        <label class="toggle"><input id="showAllEdges" type="checkbox" checked> Mostrar todas as arestas</label>
+      </div>
+      <p class="note" id="description">Clique em um vértice ou em um abrigo da lista para destacar suas conexões. Role para dar zoom e arraste para mover. No mapa, passe o mouse numa aresta para ver a distância em km.</p>
+      <div class="warning"><b>Mapa real:</b> cada abrigo fica na coordenada verdadeira e todas as arestas retornadas pelo backend são desenhadas (abrigos sem coordenada não aparecem no mapa). Clique em um abrigo para destacar todas as conexões dele; no <b>Dijkstra</b> o caminho mínimo até o destino fica em azul por cima das demais arestas. <b>Diagrama:</b> redesenha o grafo sem usar a posição real, só pra enxergar a estrutura (por padrão com um resumo das arestas). Se a API retornar 0 arestas, a causa está no grafo construído pelo backend, não no HTML.</div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>Inspecionar Dijkstra</h2>
+        <label class="field" for="target">Abrigo de destino</label>
+        <select id="target" class="select" disabled><option>Carregue o grafo primeiro</option></select>
+        <div id="pathInfo" class="pathBox">Selecione um destino para destacar o caminho mínimo encontrado.</div>
+      </section>
+      <section class="panel">
+        <h2 id="listTitle">Vértices do grafo</h2>
+        <div id="results" class="list"><div class="empty">Nenhum grafo carregado ainda.</div></div>
+      </section>
+    </aside>
+  </div>
+</main>
+<script>
+(() => {
+ 'use strict';
+ const $ = id => document.getElementById(id);
+ const graph = $('graph');
+ const palette = ['#2563eb','#dc2626','#059669','#9333ea','#d97706','#0891b2','#be185d','#4d7c0f','#475569','#c2410c','#a16207','#0f766e','#7c3aed','#15803d','#b45309'];
+ const MIN_SEP = 38;
+ const BASE_W = 1200, BASE_H = 900;
+
+ let data = null, mode = 'grafo', selectedId = null;
+ let vmap = new Map(), idx = new Map(), adj = [], allEdgesCache = null, edgeW = null;
+ let layouts = {}, curPos = null, curLayout = null;
+ let activePath = new Set(), pathPairsCache = [];
+ let view = {x:0, y:0, w:BASE_W, h:BASE_H}, baseView = {...view};
+ let tweenId = 0;
+ let viewType = 'mapa', lmap = null, edgeLayer = null, dynLayer = null, mapEdgesBuilt = false;
+ let mapDrag = null, suppressMapClickUntil = 0;
+ const key = v => String(v);
+ const ek = (a, b) => a < b ? a + '|' + b : b + '|' + a;
+ const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const colorFor = c => {
+   const index = Math.max(0, Math.trunc(Number(c || 1)) - 1);
+   if (index < palette.length) return palette[index];
+   // O grafo real pode precisar de mais cores do que as cores fixas acima.
+   const hue = (index * 137.508) % 360;
+   return `hsl(${hue.toFixed(1)}, 68%, 42%)`;
+ };
+ const fmt = n => n == null || !Number.isFinite(Number(n)) ? 'inalcançável' : `${Number(n).toFixed(2)} km`;
+ const hasCoord = v => v && v.latitude != null && v.longitude != null && v.latitude !== '' && v.longitude !== '' && Number.isFinite(+v.latitude) && Number.isFinite(+v.longitude);
+ const getVertex = id => id == null ? undefined : vmap.get(key(id));
+ const targetVertex = () => { const id = $('target').value; return id === '__nearest__' ? nearestShelter() : getVertex(id); };
+ const shortIdOf = v => v.origem ? 'U' : String(v.id).replace(/^abrigo-/, '');
+ const fillFor = (v,active) => mode==='coloracao'?colorFor(v.cor):mode==='dijkstra'?(v.origem?'#7c3aed':active?'#2563eb':(v.distanciaKm==null?'#a3b0c3':'#8793a5')):(v.origem?'#7c3aed':'#64748b');
+ function haversineKm(lat1,lng1,lat2,lng2){
+   const R=6371, rad=Math.PI/180, dLat=(lat2-lat1)*rad, dLng=(lng2-lng1)*rad;
+   const a=Math.sin(dLat/2)**2+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLng/2)**2;
+   return 2*R*Math.asin(Math.sqrt(Math.min(1,a)));
+ }
+ function originCoordinates(){
+   const origin=data?.vertices?.find(v=>v.origem);
+   if(hasCoord(origin))return {lat:+origin.latitude,lng:+origin.longitude};
+   const lat=Number($('lat').value),lng=Number($('lng').value);
+   return Number.isFinite(lat)&&Number.isFinite(lng)?{lat,lng}:null;
+ }
+ function directDistance(v){
+   const o=originCoordinates();
+   if(!o||!hasCoord(v))return Infinity;
+   return haversineKm(o.lat,o.lng,+v.latitude,+v.longitude);
+ }
+ function nearestShelter(){
+   if(!data)return null;
+   let best=null,bestKm=Infinity;
+   for(const v of data.vertices){
+     if(v.origem||!hasCoord(v))continue;
+     const km=directDistance(v);
+     if(km<bestKm){best=v;bestKm=km;}
+   }
+   return best;
+ }
+ function highlightedVertexId(){
+   if(selectedId!=null)return selectedId;
+   if(mode!=='coloracao'&&$('target').value==='__nearest__')return nearestShelter()?.id??null;
+   return null;
+ }
+ function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+ /* ---------- preparação dos dados ---------- */
+ function prepare(){
+   vmap = new Map(); idx = new Map(); allEdgesCache = null; edgeW = null; mapEdgesBuilt = false; layouts = {}; curPos = null; curLayout = null;
+   data.vertices.forEach((v,i)=>{vmap.set(key(v.id),v);idx.set(key(v.id),i);});
+   adj = data.vertices.map(()=>[]);
+   for(const e of data.arestas){
+     const a=idx.get(key(e.origemId)), b=idx.get(key(e.destinoId));
+     if(a==null||b==null||a===b)continue;
+     const w=Number(e.distanciaKm), ww=Number.isFinite(w)?w:1;
+     adj[a].push({j:b,w:ww}); adj[b].push({j:a,w:ww});
+   }
+ }
+ function allEdges(){
+   if(allEdgesCache)return allEdgesCache;
+   const seen=new Set(), out=[]; edgeW=new Map();
+   for(const e of data.arestas){
+     const a=idx.get(key(e.origemId)), b=idx.get(key(e.destinoId));
+     if(a==null||b==null||a===b)continue;
+     const k=ek(a,b); if(seen.has(k))continue; seen.add(k);
+     const w=Number(e.distanciaKm); out.push([a,b,Number.isFinite(w)?w:null]); edgeW.set(k,Number.isFinite(w)?w:null);
+   }
+   return allEdgesCache=out;
+ }
+ function weightOf(a,b){allEdges();const w=edgeW.get(ek(a,b));if(w!=null)return w;const va=data.vertices[a],vb=data.vertices[b];if(va.distanciaKm!=null&&vb.distanciaKm!=null)return Math.abs(va.distanciaKm-vb.distanciaKm);return null;}
+
+ /* ---------- caminho mínimo até o destino ---------- */
+ function computePath(){
+   activePath=new Set(); pathPairsCache=[];
+   if(!data)return;
+   const t=targetVertex(); if(!t)return;
+   const pairs=[]; let i=idx.get(key(t.id)), guard=0, ok=false;
+   while(i!=null&&guard++<=data.vertices.length){
+     const v=data.vertices[i];
+     if(v.origem){ok=true;break;}
+     if(v.anteriorId==null)break;
+     const j=idx.get(key(v.anteriorId)); if(j==null)break;
+     pairs.push([i,j]); i=j;
+   }
+   if(!ok)return;
+   pathPairsCache=pairs;
+   pairs.forEach(([a,b])=>{activePath.add(a);activePath.add(b);});
+ }
+
+ /* ---------- LAYOUT 1: grafo (forças sobre um "esqueleto" do grafo) ---------- */
+ function backbone(main){
+   const keep=new Map();
+   const add=(a,b,w)=>keep.set(ek(a,b),[a,b,w]);
+   for(const i of main) [...adj[i]].sort((p,q)=>p.w-q.w).slice(0,3).forEach(p=>add(i,p.j,p.w));
+   const all=[]; for(const i of main)for(const p of adj[i])if(i<p.j)all.push([i,p.j,p.w]);
+   all.sort((p,q)=>p[2]-q[2]);
+   const uf=data.vertices.map((_,i)=>i), find=x=>{while(uf[x]!==x){uf[x]=uf[uf[x]];x=uf[x];}return x;};
+   for(const [a,b,w] of all){const ra=find(a),rb=find(b);if(ra!==rb){uf[ra]=rb;add(a,b,w);}}
+   return [...keep.values()];
+ }
+ function geoBase(main, rnd){
+   const vs=data.vertices, geo=main.filter(i=>hasCoord(vs[i]));
+   const base=new Map();
+   if(geo.length){
+     const meanLat=geo.reduce((s,i)=>s+ +vs[i].latitude,0)/geo.length;
+     const cosLat=Math.max(.01,Math.cos(meanLat*Math.PI/180));
+     const xs=geo.map(i=>+vs[i].longitude*cosLat), ys=geo.map(i=>+vs[i].latitude);
+     const sx=[...xs].sort((a,b)=>a-b), sy=[...ys].sort((a,b)=>a-b);
+     const lo=geo.length>=10?.05:0, hi=geo.length>=10?.95:1;
+     const q=(arr,p)=>arr[Math.min(arr.length-1,Math.max(0,Math.round((arr.length-1)*p)))];
+     const x0=q(sx,lo),x1=q(sx,hi),y0=q(sy,lo),y1=q(sy,hi);
+     const S=Math.max(520,Math.sqrt(main.length)*95);
+     const sc=S/Math.max(1e-6,x1-x0,y1-y0), lim=S/2*1.12;
+     const cl=v=>Math.max(-lim,Math.min(lim,v));
+     geo.forEach((i,k)=>base.set(i,{x:cl((xs[k]-(x0+x1)/2)*sc),y:cl(-(ys[k]-(y0+y1)/2)*sc)}));
+   }
+   for(const i of main)if(!base.has(i))base.set(i,{x:(rnd()-.5)*300,y:(rnd()-.5)*300});
+   return base;
+ }
+ function layoutGrafo(){
+   const vs=data.vertices, n=vs.length, rnd=rng(20241029);
+   const oi=vs.findIndex(v=>v.origem);
+   const main=[], iso=[];
+   vs.forEach((v,i)=>{(adj[i].length>0||i===oi)?main.push(i):iso.push(i);});
+   const bb=backbone(main), base=geoBase(main,rnd), m=main.length;
+   const slot=new Map(main.map((g,k)=>[g,k]));
+   const P=main.map(g=>({x:base.get(g).x+(rnd()-.5)*10,y:base.get(g).y+(rnd()-.5)*10,bx:base.get(g).x,by:base.get(g).y}));
+   const be=bb.map(([a,b,w])=>({a:slot.get(a),b:slot.get(b),w:w??1})).filter(e=>e.a!=null&&e.b!=null);
+   const K=54, REACH2=(K*4)**2, iters=m>300?220:480, dx=new Float64Array(m), dy=new Float64Array(m);
+   for(let it=0;it<iters;it++){
+     dx.fill(0);dy.fill(0);
+     for(let a=0;a<m;a++)for(let b=a+1;b<m;b++){
+       let ex=P[a].x-P[b].x, ey=P[a].y-P[b].y, d2=ex*ex+ey*ey;
+       if(d2>REACH2)continue;
+       if(d2<.01){ex=rnd()-.5;ey=rnd()-.5;d2=ex*ex+ey*ey+.01;}
+       const f=K*K/d2; dx[a]+=ex*f;dy[a]+=ey*f;dx[b]-=ex*f;dy[b]-=ey*f;
+     }
+     for(const e of be){
+       const ex=P[e.a].x-P[e.b].x, ey=P[e.a].y-P[e.b].y, d=Math.hypot(ex,ey)||.01;
+       const f=d/K*(1.5/(1+.3*e.w));
+       dx[e.a]-=ex*f;dy[e.a]-=ey*f;dx[e.b]+=ex*f;dy[e.b]+=ey*f;
+     }
+     for(let a=0;a<m;a++){dx[a]+=(P[a].bx-P[a].x)*.03;dy[a]+=(P[a].by-P[a].y)*.03;}
+     const t=K*3*Math.pow(1-it/iters,2)+.6;
+     for(let a=0;a<m;a++){const d=Math.hypot(dx[a],dy[a])||1,s=Math.min(d,t)/d;P[a].x+=dx[a]*s;P[a].y+=dy[a]*s;}
+   }
+   for(let it=0;it<200;it++){
+     let moved=false;
+     for(let a=0;a<m;a++)for(let b=a+1;b<m;b++){
+       let ex=P[b].x-P[a].x, ey=P[b].y-P[a].y, d=Math.hypot(ex,ey);
+       if(d<MIN_SEP){if(d<.001){ex=rnd()-.5;ey=rnd()-.5;d=Math.hypot(ex,ey);}const p=(MIN_SEP-d)/2/d;P[a].x-=ex*p;P[a].y-=ey*p;P[b].x+=ex*p;P[b].y+=ey*p;moved=true;}
+     }
+     if(!moved)break;
+   }
+   const comp=new Array(m).fill(-1); let nc=0;
+   for(let st0=0;st0<m;st0++){
+     if(comp[st0]!==-1)continue;
+     const stack=[st0]; comp[st0]=nc;
+     while(stack.length){const u=stack.pop();for(const p of adj[main[u]]){const w=slot.get(p.j);if(w!=null&&comp[w]===-1){comp[w]=nc;stack.push(w);}}}
+     nc++;
+   }
+   const comps=Array.from({length:nc},()=>[]); comp.forEach((c,k)=>comps[c].push(k));
+   comps.sort((p,q)=>q.length-p.length);
+   const items=comps.map(ids=>{
+     let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+     ids.forEach(k=>{x0=Math.min(x0,P[k].x);x1=Math.max(x1,P[k].x);y0=Math.min(y0,P[k].y);y1=Math.max(y1,P[k].y);});
+     return {ids,cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0+MIN_SEP,h:y1-y0+MIN_SEP};
+   });
+   const GAP=64, rowMax=Math.max(items.length?items[0].w:0,760), rows=[]; let cur={items:[],w:0,h:0};
+   for(const it of items){
+     if(cur.items.length&&cur.w+it.w+GAP>rowMax){rows.push(cur);cur={items:[],w:0,h:0};}
+     cur.items.push(it);cur.w+=it.w+(cur.items.length>1?GAP:0);cur.h=Math.max(cur.h,it.h);
+   }
+   if(cur.items.length)rows.push(cur);
+   let yy=0;
+   for(const row of rows){
+     let xx=-row.w/2;
+     for(const it of row.items){
+       const tx=xx+it.w/2-it.cx, ty=yy+row.h/2-it.cy;
+       it.ids.forEach(k=>{P[k].x+=tx;P[k].y+=ty;});
+       xx+=it.w+GAP;
+     }
+     yy+=row.h+GAP;
+   }
+   const pos=new Array(n); main.forEach((g,k)=>pos[g]={x:P[k].x,y:P[k].y});
+   const deco=[];
+   if(iso.length){
+     const perRow=Math.max(6,Math.min(24,Math.floor((rowMax+40)/(MIN_SEP+6))));
+     const y0=yy+20;
+     iso.forEach((g,k)=>{const r=Math.floor(k/perRow),c=k%perRow,inRow=Math.min(perRow,iso.length-r*perRow);pos[g]={x:(c-(inRow-1)/2)*(MIN_SEP+6),y:y0+r*(MIN_SEP+6)};});
+     deco.push({k:'text',x:0,y:y0-36,text:`Sem conexões (${iso.length})`});
+   }
+   const seen=new Set(), baseEdges=[];
+   for(const [a,b,w] of bb){const k=ek(a,b);if(!seen.has(k)){seen.add(k);baseEdges.push([a,b,w]);}}
+   return finish({pos,deco,baseEdges,baseCls:'edge',meta:{shown:baseEdges.length}});
+ }
+
+ /* ---------- LAYOUT 2: coloração ---------- */
+ function layoutCores(){
+   const vs=data.vertices, n=vs.length, groups=new Map();
+   vs.forEach((v,i)=>{const c=Number(v.cor)||0;if(!groups.has(c))groups.set(c,[]);groups.get(c).push(i);});
+   const C=20.5;
+   const list=[...groups.entries()].map(([cor,arr])=>{
+     arr.sort((a,b)=>(vs[b].origem?1:0)-(vs[a].origem?1:0)||(vs[a].distanciaKm??1e9)-(vs[b].distanciaKm??1e9));
+     return {cor,arr,R:C*Math.sqrt(arr.length+.5)+26};
+   }).sort((a,b)=>b.R-a.R||a.cor-b.cor);
+   const gap=30, area=list.reduce((s,g)=>s+Math.PI*(g.R+gap/2)**2,0);
+   const rowMax=Math.max(list[0].R*2+gap,Math.sqrt(area/.62*1.33));
+   const rows=[]; let cur={items:[],w:0,h:0};
+   for(const g of list){
+     const dW=g.R*2+gap;
+     if(cur.items.length&&cur.w+dW>rowMax){rows.push(cur);cur={items:[],w:0,h:0};}
+     cur.items.push(g);cur.w+=dW;cur.h=Math.max(cur.h,g.R*2+gap);
+   }
+   rows.push(cur);
+   const pos=new Array(n), deco=[]; let y=0;
+   for(const row of rows){
+     let x=-row.w/2;
+     for(const g of row.items){
+       const cx=x+g.R+gap/2, cy=y+row.h/2;
+       const pts=g.arr.map((vi,k)=>{const r=g.arr.length===1?0:C*Math.sqrt(k+.5),a=k*2.399963;return{x:r*Math.cos(a),y:r*Math.sin(a)};});
+       const mx=pts.reduce((t,p)=>t+p.x,0)/pts.length, my=pts.reduce((t,p)=>t+p.y,0)/pts.length;
+       g.arr.forEach((vi,k)=>{pos[vi]={x:cx+pts[k].x-mx,y:cy+pts[k].y-my};});
+       deco.push({k:'halo',x:cx,y:cy,r:g.R,color:g.cor?colorFor(g.cor):'#94a3b8'});
+       deco.push({k:'text',x:cx,y:cy-g.R-8,text:`${g.cor?'Cor '+g.cor:'Sem cor'} · ${g.arr.length}`});
+       x+=g.R*2+gap;
+     }
+     y+=row.h;
+   }
+   return finish({pos,deco,baseEdges:[],baseCls:'edge',meta:{}});
+ }
+
+ /* ---------- LAYOUT 3: Dijkstra ---------- */
+ function layoutRadial(){
+   const vs=data.vertices, n=vs.length, oi=vs.findIndex(v=>v.origem);
+   if(oi<0)return layoutGrafo();
+   const o=vs[oi], geo=vs.filter(hasCoord);
+   const cosLat=Math.max(.01,Math.cos((geo.length?geo.reduce((s,v)=>s+ +v.latitude,0)/geo.length:-23.5)*Math.PI/180));
+   const TAU=Math.PI*2;
+   const pref=i=>{const v=vs[i];if(!hasCoord(v)||!hasCoord(o))return i*.001;const b=Math.atan2(+v.latitude-+o.latitude,(+v.longitude-+o.longitude)*cosLat);return(((-b+Math.PI/2)%TAU)+TAU)%TAU;};
+   const kids=vs.map(()=>[]);
+   vs.forEach((v,i)=>{if(i===oi||v.anteriorId==null)return;const p=idx.get(key(v.anteriorId));if(p!=null&&p!==i)kids[p].push(i);});
+   const depth=new Array(n).fill(-1), leaves=new Array(n).fill(0), seen=new Set();
+   (function dfs(u,d){
+     seen.add(u);depth[u]=d;
+     kids[u]=kids[u].filter(c=>!seen.has(c)).sort((a,b)=>pref(a)-pref(b));
+     let l=0;for(const c of kids[u]){if(depth[c]!==-1)continue;dfs(c,d+1);l+=leaves[c];}
+     leaves[u]=l||1;
+   })(oi,0);
+   const ang=new Array(n).fill(0);
+   (function place(u,a0,a1){
+     ang[u]=(a0+a1)/2;
+     const ch=kids[u].filter(c=>depth[c]>depth[u]), tot=ch.reduce((s,c)=>s+leaves[c],0)||1;
+     let a=a0;for(const c of ch){const sp=(a1-a0)*leaves[c]/tot;place(c,a,a+sp);a+=sp;}
+   })(oi,-Math.PI/2,Math.PI*1.5);
+   const maxD=Math.max(0,...depth), byD=[];
+   for(let i=0;i<n;i++)if(depth[i]>0)(byD[depth[i]]||(byD[depth[i]]=[])).push(i);
+   const radius=[0], pos=new Array(n), deco=[];
+   for(let d=1;d<=maxD;d++){
+     const cnt=(byD[d]||[]).length;
+     radius[d]=Math.max(radius[d-1]+80,cnt*MIN_SEP*1.1/TAU);
+   }
+   pos[oi]={x:0,y:0};
+   for(let d=1;d<=maxD;d++){
+     const arr=(byD[d]||[]).slice().sort((a,b)=>ang[a]-ang[b]), r=radius[d], minGap=MIN_SEP*1.05/r;
+     const th=arr.map(i=>ang[i]), th0=th.slice();
+     for(let it=0;it<300&&arr.length>1;it++){
+       let moved=false;
+       for(let k=0;k<arr.length;k++){
+         const nx=(k+1)%arr.length; let gp=th[nx]-th[k]; if(nx===0)gp+=TAU;
+         if(gp<minGap){const p=(minGap-gp)/2*.6;th[k]-=p;th[nx]+=p;moved=true;}
+       }
+       for(let k=0;k<arr.length;k++)th[k]+=(th0[k]-th[k])*.015;
+       if(!moved)break;
+     }
+     arr.forEach((i,k)=>pos[i]={x:r*Math.cos(th[k]),y:r*Math.sin(th[k])});
+     deco.push({k:'ring',x:0,y:0,r});
+   }
+   const lost=[]; for(let i=0;i<n;i++)if(depth[i]===-1)lost.push(i);
+   if(lost.length){
+     const outer=radius[maxD]||0, perRow=Math.max(6,Math.min(24,Math.floor((outer*2+80)/(MIN_SEP+6)))), y0=outer+120;
+     lost.forEach((i,k)=>{const r=Math.floor(k/perRow),c=k%perRow,inRow=Math.min(perRow,lost.length-r*perRow);pos[i]={x:(c-(inRow-1)/2)*(MIN_SEP+6),y:y0+r*(MIN_SEP+6)};});
+     deco.push({k:'text',x:0,y:y0-38,text:`Sem caminho até a origem (${lost.length})`});
+   }
+   const baseEdges=[];
+   vs.forEach((v,i)=>{if(depth[i]>0&&v.anteriorId!=null){const j=idx.get(key(v.anteriorId));if(j!=null)baseEdges.push([i,j,weightOf(i,j)]);}});
+   const rings=[];
+   for(let d=1;d<=maxD;d++){const arr=byD[d]||[];rings.push({d,count:arr.length,maxKm:arr.length?Math.max(...arr.map(i=>vs[i].distanciaKm??0)):0});}
+   return finish({pos,deco,baseEdges,baseCls:'edge tree',meta:{rings,lost:lost.length}});
+ }
+ function finish(L){
+   let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+   const ext=(x,y,px,py)=>{x0=Math.min(x0,x-px);x1=Math.max(x1,x+px);y0=Math.min(y0,y-py);y1=Math.max(y1,y+py);};
+   L.pos.forEach(p=>{if(p)ext(p.x,p.y,16,16);});
+   for(const o of L.deco){if(o.r!=null)ext(o.x,o.y,o.r,o.r);else ext(o.x,o.y,90,22);}
+   if(!Number.isFinite(x0)){x0=y0=-100;x1=y1=100;}
+   L.bounds={x0,y0,x1,y1};
+   return L;
+ }
+ function getLayout(m){if(!layouts[m])layouts[m]=m==='coloracao'?layoutCores():m==='dijkstra'?layoutRadial():layoutGrafo();return layouts[m];}
+
+ /* ---------- vista (zoom / pan) do diagrama ---------- */
+ function fitView(b){
+   const r=graph.getBoundingClientRect(), asp=r.width>0&&r.height>0?r.width/r.height:BASE_W/BASE_H, pad=46;
+   let w=Math.max(b.x1-b.x0+pad*2,640), h=Math.max(b.y1-b.y0+pad*2,480);
+   if(w/h<asp)w=h*asp;else h=w/asp;
+   return {x:(b.x0+b.x1)/2-w/2,y:(b.y0+b.y1)/2-h/2,w,h};
+ }
+ function applyView(){graph.setAttribute('viewBox',`${view.x.toFixed(2)} ${view.y.toFixed(2)} ${view.w.toFixed(2)} ${view.h.toFixed(2)}`);}
+ function toSvg(cx,cy){const m=graph.getScreenCTM&&graph.getScreenCTM();if(!m)return{x:view.x+view.w/2,y:view.y+view.h/2};const p=graph.createSVGPoint();p.x=cx;p.y=cy;return p.matrixTransform(m.inverse());}
+ function zoomAt(cx,cy,f){const p=toSvg(cx,cy), nw=Math.min(Math.max(view.w*f,baseView.w/12),baseView.w*2.5), k=nw/view.w;view={x:p.x-(p.x-view.x)*k,y:p.y-(p.y-view.y)*k,w:nw,h:view.h*k};applyView();}
+ function zoomCenter(f){const r=graph.getBoundingClientRect();zoomAt(r.left+r.width/2,r.top+r.height/2,f);}
+ let drag=null, dragMoved=false;
+ graph.addEventListener('wheel',e=>{e.preventDefault();zoomAt(e.clientX,e.clientY,Math.exp(e.deltaY*.0015));},{passive:false});
+ graph.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};dragMoved=false;});
+ window.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!dragMoved&&Math.hypot(dx,dy)<5)return;const m=graph.getScreenCTM();if(!m)return;dragMoved=true;graph.classList.add('grabbing');tweenId++;view.x=drag.vx-dx/m.a;view.y=drag.vy-dy/m.d;applyView();});
+ window.addEventListener('pointerup',()=>{drag=null;graph.classList.remove('grabbing');});
+ $('zin').addEventListener('click',()=>zoomCenter(1/1.35));
+ $('zout').addEventListener('click',()=>zoomCenter(1.35));
+ $('zfit').addEventListener('click',()=>{if(viewType==='mapa'){fitMap();return;}if(!curLayout)return;view=baseView=fitView(curLayout.bounds);applyView();});
+
+ /* ---------- desenho ---------- */
+ function decoSvg(deco){return deco.map(o=>{if(o.k==='halo')return `<circle class="halo" cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${o.r.toFixed(1)}" style="fill:${o.color};stroke:${o.color}"/>`;if(o.k==='ring')return `<circle class="ring" cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${o.r.toFixed(1)}"/>`;return `<text class="deco-label" x="${o.x.toFixed(1)}" y="${o.y.toFixed(1)}">${escapeHtml(o.text)}</text>`;}).join('');}
+ function edgesToDraw(L){
+   const showAll=$('showAllEdges').checked, focus=$('focusEdges').checked&&mode!=='dijkstra';
+   const layers=[]; if(showAll)layers.push({cls:'edge faint',list:allEdges()});layers.push({cls:L.baseCls,list:L.baseEdges});
+   const highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId));if(focus&&si!=null)layers.push({cls:'edge neighbor',list:adj[si].map(p=>[si,p.j,p.w])});
+   if(mode==='dijkstra'&&pathPairsCache.length)layers.push({cls:'edge path',list:pathPairsCache.map(([a,b])=>[a,b,weightOf(a,b)]),labels:true});return layers;
+ }
+ function drawGraph(P,L,withDeco){
+   const vs=data.vertices,highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId)),focus=$('focusEdges').checked&&si!=null&&mode==='grafo';
+   const nbr=new Set();if(focus)adj[si].forEach(p=>nbr.add(p.j));let s=withDeco?decoSvg(L.deco):'';
+   for(const layer of edgesToDraw(L))for(const [a,b,w] of layer.list){const A=P[a],B=P[b];if(!A||!B)continue;s+=`<line class="${layer.cls}" x1="${A.x.toFixed(1)}" y1="${A.y.toFixed(1)}" x2="${B.x.toFixed(1)}" y2="${B.y.toFixed(1)}"/>`;if(layer.labels&&withDeco&&w!=null)s+=`<text class="small-label" x="${((A.x+B.x)/2).toFixed(1)}" y="${((A.y+B.y)/2-5).toFixed(1)}">${escapeHtml(Number(w).toFixed(1))} km</text>`;}
+   const showNums=$('showLabels').checked;
+   for(let i=0;i<vs.length;i++){const v=vs[i],p=P[i];if(!p)continue;const active=mode==='dijkstra'&&activePath.has(i),isSel=si===i,isNb=nbr.has(i),fill=fillFor(v,active),r=v.origem?12:isSel?12:isNb?10.5:9,sid=shortIdOf(v),fs=v.origem?10:(sid.length>2?7.5:9),dim=focus&&!isSel&&!isNb&&!v.origem;s+=`<g data-i="${i}"${dim?' class="dim"':''}><title>${escapeHtml(v.nome)}${v.origem?' · origem':` · ID ${escapeHtml(sid)} · ${fmt(v.distanciaKm)} desde a origem · Cor ${v.cor}`}</title><circle class="node${v.origem?' source':''}${isSel?' selected':isNb?' nb':''}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${r}" fill="${fill}"/>${(v.origem||showNums)?`<text class="node-label" x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" font-size="${fs}">${escapeHtml(sid)}</text>`:''}</g>`;}
+   graph.innerHTML=s;
+ }
+ function renderSide(){
+   if(!data)return;const Ly=curLayout,onMap=viewType==='mapa',missing=data.vertices.filter(v=>!hasCoord(v)).length;let h;
+   if(mode==='coloracao')h=(data.gruposColoracao||[]).map(g=>`<span class="chip"><span class="colorDot" style="background:${colorFor(g.cor)}"></span>Cor ${g.cor}: ${g.vertices.length}</span>`).join('');
+   else if(mode==='dijkstra'){h='<span class="chip"><span class="colorDot" style="background:#2563eb"></span>Caminho selecionado</span><span class="chip"><span class="colorDot" style="background:#7c3aed"></span>Origem</span>';if(!onMap)h+=(Ly?.meta?.rings||[]).map(r=>`<span class="chip">${r.d}º salto: ${r.count} abrigo${r.count>1?'s':''} · até ${r.maxKm.toFixed(1)} km</span>`).join('');const lost=onMap?data.vertices.filter(v=>!v.origem&&v.distanciaKm==null).length:(Ly?.meta?.lost||0);if(lost)h+=`<span class="chip"><span class="colorDot" style="background:#a3b0c3"></span>Sem caminho: ${lost}</span>`;}
+   else h=`<span class="chip">Origem: roxo</span><span class="chip">Arestas no backend: ${data.arestas.length}</span>`+(onMap?'<span class="chip">Passe o mouse numa aresta para ver os km</span>':`<span class="chip">Mostradas no resumo: ${Ly?.meta?.shown??0}</span>`)+'<span class="chip">Clique em um vértice para ver todas as conexões dele</span>';
+   if(onMap&&missing)h+=`<span class="chip">${missing} sem coordenada (fora do mapa)</span>`;$('legend').innerHTML=h;renderResults();renderPathInfo();
+ }
+ function render(){if(!data)return;if(viewType==='mapa'){renderMap();renderSide();return;}curLayout=getLayout(mode);if(!curPos)curPos=curLayout.pos;computePath();drawGraph(curPos,curLayout,true);renderSide();}
+ function switchMode(next){
+   if(!data||viewType==='mapa'){mode=next;if(data)render();return;}const oldPos=curPos,oldView={...view};mode=next;const L=getLayout(mode);curLayout=L;computePath();const target=fitView(L.bounds);baseView=target;
+   const cost=L.baseEdges.length+($('showAllEdges').checked?allEdges().length:0),reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches,my=++tweenId;
+   if(!oldPos||oldPos.length!==L.pos.length||cost>700||reduce||typeof requestAnimationFrame!=='function'){curPos=L.pos;view=target;applyView();render();return;}
+   renderSide();const t0=performance.now(),D=480;const step=now=>{if(my!==tweenId)return;const t=Math.min(1,(now-t0)/D),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const P=L.pos.map((p,i)=>{const o=oldPos[i]||p;return{x:o.x+(p.x-o.x)*e,y:o.y+(p.y-o.y)*e};});view={x:oldView.x+(target.x-oldView.x)*e,y:oldView.y+(target.y-oldView.y)*e,w:oldView.w+(target.w-oldView.w)*e,h:oldView.h+(target.h-oldView.h)*e};applyView();if(t<1){drawGraph(P,L,false);requestAnimationFrame(step);}else{curPos=L.pos;view=target;applyView();render();}};requestAnimationFrame(step);
+ }
+ function select(id,pan){selectedId=id;const v=getVertex(id);if(mode==='dijkstra'&&v&&!v.origem)$('target').value=String(v.id);render();if(pan&&viewType==='mapa'&&lmap&&v&&hasCoord(v))lmap.setView([+v.latitude,+v.longitude],Math.max(lmap.getZoom(),14));}
+ graph.addEventListener('click',e=>{if(dragMoved){dragMoved=false;return;}const g=e.target.closest&&e.target.closest('[data-i]');if(g&&data)select(data.vertices[+g.getAttribute('data-i')].id);else if(selectedId!=null){selectedId=null;render();}});
+
+ /* ---------- MAPA REAL (Leaflet + OpenStreetMap) ---------- */
+ const ll=v=>[+v.latitude,+v.longitude];
+ function enableEasyMapPan(){
+   if(!lmap)return;const container=lmap.getContainer();if(container.dataset.easyPanInstalled==='1')return;container.dataset.easyPanInstalled='1';lmap.dragging.disable();
+   container.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||!e.isPrimary||e.button!==0)return;if(e.target.closest?.('.leaflet-control'))return;mapDrag={pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};},true);
+   window.addEventListener('pointermove',e=>{if(!mapDrag||e.pointerId!==mapDrag.pointerId)return;const totalX=e.clientX-mapDrag.startX,totalY=e.clientY-mapDrag.startY;if(!mapDrag.moved&&Math.hypot(totalX,totalY)<4)return;mapDrag.moved=true;e.preventDefault();const dx=e.clientX-mapDrag.lastX,dy=e.clientY-mapDrag.lastY;if(dx!==0||dy!==0)lmap.panBy([-dx,-dy],{animate:false});mapDrag.lastX=e.clientX;mapDrag.lastY=e.clientY;container.classList.add('is-panning');},{capture:true,passive:false});
+   function finishMapPan(e){if(!mapDrag||e.pointerId!==mapDrag.pointerId)return;if(mapDrag.moved)suppressMapClickUntil=Date.now()+400;mapDrag=null;container.classList.remove('is-panning');}
+   window.addEventListener('pointerup',finishMapPan,true);window.addEventListener('pointercancel',finishMapPan,true);
+   container.addEventListener('click',e=>{if(Date.now()<suppressMapClickUntil){e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();}},true);
+ }
+ function ensureMap(){
+   if(lmap)return true;if(!window.L)return false;lmap=window.L.map('map',{preferCanvas:true}).setView([-23.5505,-46.6333],12);
+   window.L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(lmap);
+   edgeLayer=window.L.layerGroup().addTo(lmap);dynLayer=window.L.layerGroup().addTo(lmap);lmap.on('click',()=>{if(selectedId!=null){selectedId=null;render();}});enableEasyMapPan();return true;
+ }
+ function buildMapEdges(){
+   const Lf=window.L,vs=data.vertices;edgeLayer.clearLayers();
+   for(const [a,b,w] of allEdges()){const A=vs[a],B=vs[b];if(!hasCoord(A)||!hasCoord(B))continue;Lf.polyline([ll(A),ll(B)],{color:'#475569',weight:1.6,opacity:.45,bubblingMouseEvents:false}).bindTooltip(`${escapeHtml(shortIdOf(A))} ↔ ${escapeHtml(shortIdOf(B))} · ${w!=null?w.toFixed(2)+' km':'—'}`,{sticky:true}).addTo(edgeLayer);}
+   mapEdgesBuilt=true;
+ }
+ function renderMap(){
+   if(!ensureMap()){setViewType('diagrama');return;}const Lf=window.L;if(!mapEdgesBuilt)buildMapEdges();
+   if($('showAllEdges').checked){if(!lmap.hasLayer(edgeLayer))lmap.addLayer(edgeLayer);}else if(lmap.hasLayer(edgeLayer))lmap.removeLayer(edgeLayer);dynLayer.clearLayers();computePath();
+   const vs=data.vertices,highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId)),focus=$('focusEdges').checked&&si!=null&&mode==='grafo',nbr=new Set();if(focus)adj[si].forEach(p=>nbr.add(p.j));
+   if(focus)for(const p of adj[si]){const A=vs[si],B=vs[p.j];if(hasCoord(A)&&hasCoord(B))Lf.polyline([ll(A),ll(B)],{color:'#111827',weight:3,opacity:.85,interactive:false}).addTo(dynLayer);}
+   if(mode==='dijkstra')for(const [a,b] of pathPairsCache){const A=vs[a],B=vs[b];if(!hasCoord(A)||!hasCoord(B))continue;Lf.polyline([ll(A),ll(B)],{color:'#2563eb',weight:6,opacity:1,interactive:false}).addTo(dynLayer);const w=weightOf(a,b);if(w!=null)Lf.tooltip({permanent:true,direction:'center',className:'kmtip',interactive:false}).setLatLng([(+A.latitude+ +B.latitude)/2,(+A.longitude+ +B.longitude)/2]).setContent(`${w.toFixed(1)} km`).addTo(dynLayer);}
+   const showNums=$('showLabels').checked,dimOn=focus&&mode==='grafo';
+   vs.forEach((v,i)=>{if(!hasCoord(v))return;const active=mode==='dijkstra'&&activePath.has(i),isSel=si===i,isNb=nbr.has(i),sid=shortIdOf(v),cls='pin'+(v.origem?' src':'')+(isSel?' sel':isNb?' nb':'')+(dimOn&&!isSel&&!isNb&&!v.origem?' dim':'');const icon=Lf.divIcon({className:'pinwrap',html:`<div class="${cls}" style="background:${fillFor(v,active)}">${showNums||v.origem?escapeHtml(sid):''}</div>`,iconSize:[24,24],iconAnchor:[12,12]});Lf.marker(ll(v),{icon,zIndexOffset:isSel?1000:v.origem?900:active?600:isNb?300:0,riseOnHover:true}).bindTooltip(`${escapeHtml(v.nome)}${v.origem?' · origem':` · ID ${escapeHtml(sid)} · ${escapeHtml(fmt(v.distanciaKm))} desde a origem · Cor ${v.cor}`}`,{direction:'top',offset:[0,-12]}).on('click',()=>select(v.id)).addTo(dynLayer);});
+ }
+ function fitMap(){if(!lmap)return;lmap.invalidateSize();const vs=data?data.vertices:[];let pts=vs.filter((v,i)=>hasCoord(v)&&(adj[i].length>0||v.origem));if(!pts.length)pts=vs.filter(hasCoord);if(!pts.length)return;lmap.fitBounds(window.L.latLngBounds(pts.map(ll)),{padding:[40,40],maxZoom:15});}
+ function setViewType(t){
+   if(t==='mapa'&&!ensureMap()){$('status').className='status warn';$('status').textContent='Não consegui carregar a biblioteca do mapa (Leaflet). Ela vem de unpkg.com, então confira a internet. Mostrando o diagrama.';t='diagrama';}
+   viewType=t;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===t));const onMap=t==='mapa';$('map').style.display=onMap?'block':'none';graph.style.display=onMap?'none':'block';$('zin').style.display=$('zout').style.display=onMap?'none':'';$('showAllEdges').checked=onMap;
+   if(!data)return;if(onMap){render();fitMap();}else{tweenId++;curLayout=getLayout(mode);curPos=curLayout.pos;view=baseView=fitView(curLayout.bounds);applyView();render();}
+ }
+
+ /* ---------- painéis laterais ---------- */
+ function renderResults(){
+   if(!data)return;const area=$('results');
+   if(mode==='coloracao'){$('listTitle').textContent='Classes de coloração';area.innerHTML=(data.gruposColoracao||[]).map(g=>`<div class="item"><strong><span class="colorDot" style="background:${colorFor(g.cor)}"></span>Cor ${g.cor} (${g.vertices.length})</strong><div class="muted">${g.vertices.map(id=>escapeHtml(getVertex(id)?.nome||id)).join(' · ')}</div></div>`).join('')||'<div class="empty">Nenhuma classe retornada.</div>';}
+   else if(mode==='dijkstra'){
+     if($('target').value==='__nearest__'){$('listTitle').textContent='Abrigos mais próximos (linha reta)';area.innerHTML=data.vertices.filter(v=>!v.origem).map(v=>({v,d:directDistance(v)})).sort((a,b)=>a.d-b.d).map(({v,d})=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${escapeHtml(v.nome)}</strong><div class="muted">Distância em linha reta: ${Number.isFinite(d)?d.toFixed(2)+' km':'sem coordenadas'}</div></div>`).join('')||'<div class="empty">Nenhum abrigo com localização.</div>';}
+     else{$('listTitle').textContent='Distâncias desde a origem';area.innerHTML=data.vertices.filter(v=>!v.origem).slice().sort((a,b)=>(a.distanciaKm??Infinity)-(b.distanciaKm??Infinity)).map(v=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${escapeHtml(v.nome)}</strong><div class="muted">Distância no grafo: ${escapeHtml(fmt(v.distanciaKm))}</div></div>`).join('')||'<div class="empty">Nenhum abrigo com localização.</div>';}
+   }
+   else if($('target').value==='__nearest__'){
+     $('listTitle').textContent='Abrigos mais próximos (linha reta)';
+     area.innerHTML=data.vertices.filter(v=>!v.origem&&hasCoord(v)).map(v=>({v,d:directDistance(v)})).sort((a,b)=>a.d-b.d).map(({v,d})=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${escapeHtml(v.nome)}</strong><div class="muted">ID ${escapeHtml(shortIdOf(v))} · ${Number.isFinite(d)?d.toFixed(2)+' km em linha reta':'distância indisponível'} · Cor ${v.cor}</div></div>`).join('')||'<div class="empty">Nenhum abrigo com coordenadas válidas.</div>';
+   }
+   else{$('listTitle').textContent='Vértices do grafo';area.innerHTML=data.vertices.map(v=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${v.origem?'🟣 ':''}${escapeHtml(v.nome)}</strong><div class="muted">${v.origem?'Localização de origem':`ID ${escapeHtml(shortIdOf(v))} · Cor ${v.cor} · ${fmt(v.distanciaKm)} da origem`}</div></div>`).join('');}
+   area.querySelectorAll('[data-select]').forEach(el=>el.addEventListener('click',()=>{const id=el.getAttribute('data-select');selectedId=id;if(mode==='dijkstra')$('target').value=id;render();}));
+ }
+ function renderPathInfo(){
+   const v=targetVertex();
+   if($('target').value==='__nearest__'){
+     if(!v){$('pathInfo').textContent='Não encontrei abrigos com coordenadas válidas para calcular o mais próximo.';return;}
+     const d=directDistance(v);const graphDistance=fmt(v.distanciaKm);
+     $('pathInfo').textContent=`Abrigo mais próximo de você: ${v.nome}. Distância em linha reta (Haversine): ${Number.isFinite(d)?d.toFixed(2)+' km':'indisponível'}. Distância acumulada no grafo: ${graphDistance}. Essa distância não é uma rota por ruas.`;
+     return;
+   }
+   if(!v){$('pathInfo').textContent='Selecione um destino para destacar o caminho mínimo encontrado.';return;}
+   if(v.distanciaKm==null){$('pathInfo').textContent=`Não há caminho no grafo de até ${data.raioConexaoKm} km entre a origem e ${v.nome}.`;return;}
+   let cur=v,guard=0,ids=[];while(cur&&guard++<=data.vertices.length){ids.push(cur.nome);if(cur.origem)break;if(cur.anteriorId==null)break;cur=getVertex(cur.anteriorId);}if(!cur?.origem){$('pathInfo').textContent=`Distância calculada: ${fmt(v.distanciaKm)}. O caminho não foi reconstruído até a origem.`;return;}$('pathInfo').textContent=`Caminho: ${ids.reverse().join(' → ')}. Custo acumulado: ${fmt(v.distanciaKm)}.`;
+ }
+ function fillTargets(){
+   const t=$('target'),shelters=data.vertices.filter(v=>!v.origem);
+   t.innerHTML='<option value="__nearest__">Mais próximo de mim (Haversine)</option>'+shelters.map(v=>`<option value="${escapeHtml(v.id)}">${escapeHtml(v.nome)}</option>`).join('');
+   t.disabled=!shelters.some(hasCoord);t.value=shelters.some(hasCoord)?'__nearest__':'';
+ }
+
+ /* ---------- carga dos dados ---------- */
+ async function load(){
+   const lat=Number($('lat').value),lng=Number($('lng').value);
+   if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<-90||lat>90||lng<-180||lng>180){$('status').className='status error';$('status').textContent='Informe latitude entre -90 e 90 e longitude entre -180 e 180.';return;}
+   const b=$('load');b.disabled=true;b.textContent='Construindo…';$('status').className='status';$('status').textContent='Consultando o endpoint do backend…';
+   try{
+     const resp=await fetch(`/api/local/grafo?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,{headers:{Accept:'application/json'}});
+     if(!resp.ok){const body=await resp.text();throw new Error(`HTTP ${resp.status}: ${body.slice(0,300)}`);}
+     data=await resp.json();if(!Array.isArray(data.vertices)||!Array.isArray(data.arestas))throw new Error('A resposta da API não contém as listas vertices e arestas esperadas.');
+     prepare();$('nVertices').textContent=data.vertices.length;$('nArestas').textContent=data.arestas.length;$('nCores').textContent=data.quantidadeCores??(data.gruposColoracao||[]).length;$('nReachable').textContent=data.vertices.filter(v=>!v.origem&&v.distanciaKm!=null).length;$('description').textContent=data.descricao||'';
+     fillTargets();selectedId=null;tweenId++;
+     if(viewType==='diagrama'){curLayout=getLayout(mode);curPos=curLayout.pos;view=baseView=fitView(curLayout.bounds);applyView();}
+     render();if(viewType==='mapa')fitMap();
+     if(data.arestas.length===0){$('status').className='status error';$('status').textContent=`A API retornou ${data.vertices.length} vértices, mas 0 arestas. O HTML não está escondendo as conexões: o backend não as retornou. Confira se TGrafo.insereV está conectando os vizinhos e se o endpoint está usando essa versão da classe.`;}
+     else{$('status').className='status';$('status').textContent=`Grafo recebido do backend: ${data.vertices.length} vértices, ${data.arestas.length} arestas e ${$('nCores').textContent} cores. ${viewType==='mapa'?'O mapa mostra todas as arestas; clique em um abrigo para destacar as conexões dele.':'O diagrama mostra um resumo das arestas; marque “Mostrar todas as arestas” para ver tudo.'}`;}
+   }catch(e){$('status').className='status error';$('status').textContent=`Não consegui carregar o grafo. ${e.message}. Confirme que o servidor está rodando e abra ${window.location.origin}/algoritmos-visual.html.`;}
+   finally{b.disabled=false;b.textContent='Construir grafo';}
+ }
+ function setMapFullscreen(enabled){
+   if(enabled&&viewType!=='mapa')setViewType('mapa');
+   document.body.classList.toggle('map-fullscreen',enabled);
+   const b=$('fullscreenMap');b.textContent=enabled?'✕ Sair da tela cheia':'⛶ Tela cheia do mapa';b.setAttribute('aria-pressed',String(enabled));
+   if(lmap)requestAnimationFrame(()=>lmap.invalidateSize());
+ }
+ document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{if(document.body.classList.contains('map-fullscreen'))setMapFullscreen(false);setViewType(b.dataset.view);}));
+ $('fullscreenMap').addEventListener('click',()=>setMapFullscreen(!document.body.classList.contains('map-fullscreen')));
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('map-fullscreen'))setMapFullscreen(false);});
+ $('load').addEventListener('click',load);
+ $('target').addEventListener('change',()=>{
+   if(!data)return;
+   const v=targetVertex();
+   selectedId=$('target').value==='__nearest__'?null:(v&&!v.origem?v.id:null);
+   render();
+ });
+ document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.toggle('active',x===b));switchMode(b.dataset.mode);}));
+ ['showLabels','focusEdges','showAllEdges'].forEach(id=>$(id).addEventListener('change',()=>{if(data)render();}));
+ $('geo').addEventListener('click',()=>{
+   if(!navigator.geolocation){$('status').className='status error';$('status').textContent='Este navegador não oferece geolocalização.';return;}
+   $('status').textContent='Obtendo sua localização…';
+   navigator.geolocation.getCurrentPosition(pos=>{$('lat').value=pos.coords.latitude.toFixed(6);$('lng').value=pos.coords.longitude.toFixed(6);load();},err=>{$('status').className='status error';$('status').textContent=`Não foi possível obter a localização (${err.message}). Você pode preencher latitude e longitude manualmente.`;},{enableHighAccuracy:true,timeout:10000});
+ });
+ $('lat').addEventListener('keydown',e=>{if(e.key==='Enter')load();});$('lng').addEventListener('keydown',e=>{if(e.key==='Enter')load();});
+ if(window.L&&ensureMap()){$('map').style.display='block';}
+ else{viewType='diagrama';$('map').style.display='none';graph.style.display='block';$('showAllEdges').checked=false;document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='diagrama'));$('status').className='status warn';$('status').textContent='Não consegui carregar a biblioteca do mapa (Leaflet, de unpkg.com). Mostrando o diagrama; confira a internet para usar o mapa real.';}
+})();
+</script>
+</body>
+</html>
