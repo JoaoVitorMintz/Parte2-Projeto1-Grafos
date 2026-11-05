@@ -24,7 +24,7 @@ public class VisualizacaoServidor {
     private static final int PORTA = 8080;
     private static final double RAIO_CONEXAO_KM = 5.0;
     private static final Pattern LINHA_ABRIGO = Pattern.compile("^\\s*(\\d+)\\s+\"([^\"]*)\"\\s+\"([^\"]*)\"\\s*$");
-    private static final String ARQUIVO_DADOS = "geocodificador/centro_acolhida_adultos_geocodificado.txt";
+    private static final String ARQUIVO_DADOS = "geocodificador/centro_acolhida_geocodificado.txt";
     private static final String ARQUIVO_HTML = "algoritmos-visual.html";
 
     private final Path raiz;
