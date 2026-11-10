@@ -33,6 +33,26 @@ aresta, gravarArquivo escreve o peso, buildGraph lê o peso do arquivo em vez de
 
 27/09 - João Vitor Garcia Aguiar Mintz - Testes realizados, validação do código
 27/09 - Giovanni Barreiro G. de Castro - Envio do relatório dentro do github deste projeto do bimestre
+
+28/09 - João Vitor Garcia Aguiar Mintz - Inserção do relatório da primeira entrega
+
+30/09 - João Vitor Garcia Aguiar Mintz - Inserção dos slides + comandos para compilar caso necessário para apresentação
+
+02/10 - Giovanni Barreiro G. de Castro - Criação do Dijkstra para o Projeto
+
+03/10 - João Vitor Garcia Aguiar Mintz - Ajuste para realização do exercício do dijkstra
+
+18/10 - João Vitor Garcia Aguiar Mintz - Mapeando agora corretamente os endereços de abrigos. De fato não há uma API específica 
+para abrigos de MORADORES EM SITUAÇÃO DE RUA e, por isso, precisamos fazer manualmente. Adição de script python que pegta o endereço
+indicado no arquivo, pega por uma API de geolocalização a latitude e longitude com base no endereço e insere no arquivo txt
+
+29/10 - Yan Andreotti dos Santos - Adição de script HTML + Coloração para testes
+
+04/11 - João Vitor Garcia Aguiar Mintz - Apenas a adição de mais alguns abrigos para garantir ficar acima de 80 abrigos
+04/11 - Yan Andreotti dos Santos - Ajustando leitura HTML
+
+10/11 - João Vitor Garcia Aguiar Mintz - Corrigindo grafo.txt para ter as arestas e vértices corrigidos + inserção do código correto 
+de coloração em TGrafo + adição do Dijkstra e do coloração no menu, ainda falta um algoritmo e corrigir o HTML
 */
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -517,6 +537,7 @@ public class TGrafo {
 
         ResultadoDijkstra resultado = calcularDijkstra(origem);
         double[] dist = resultado.distancias;
+
         int[] antecessor = resultado.antecessores;
 
         System.out.println("\n=== RESULTADO DO ALGORITMO DE DIJKSTRA ===");
@@ -558,6 +579,112 @@ public class TGrafo {
             if (i > 0) System.out.print(" -> ");
         }
         System.out.println();
+    }
+
+    // Exercício Implementação de Coloração por Classe
+    // Algoritmo de coloração por classe
+    public void coloracao_classe() {
+        // Criado uma classe de lista ligada para inserir conjuntos de coloração
+        // Como o algoritmo é guloso, não precisa de remoção de vértice desta classe
+        TColoracao C = new TColoracao(this.n);
+
+
+        // Criação de W com todos os vértices de V:
+        int[] W = new int[this.n];
+        for (int i = 0; i < n; i++) {
+            W[i] = i;
+        }
+
+        // Re-rotulação para garantir maiores graus primeiro
+        ordenaPorGrau(W);
+
+        // Indicador da classe atual de cor k, sendo que como usamos uma lista, começar em 0 ao invés de 1,
+        // o valor do vértice (1...n) estará no rótulo do vértice
+        int k = 0;
+
+        // Enquanto houver vértices em W
+        while (temVerticeNaoColorido(W)) {
+            // Percorre os vértices ainda não coloridos
+            for (int i = 0; i < this.n; i++) {
+                int j = W[i]; // Validar se o vértice ja foi lido
+
+                if (j == -1) {
+                    continue; // Vértice lido, pula
+                }
+
+                // Se algum vértice da classe atual k não fizer parte dos vizinhos de vi
+                if (!ehAdjacente(i, C, k)) {
+                    C.insereVerticeCor(k, j);
+                    W[i] = -1;
+                }
+            }
+            k++; // Avança para a próxima cor
+        }
+
+        C.numCores = k;
+
+        // Exibir o resultado da coloração
+        for (int cor = 0; cor < C.numCores; cor++) {
+            C.exibeCores(cor, this.rotulo);
+        }
+    }
+
+    // Reordena por grau (Re-rotulação) por método semelhante à selection sort
+    private void ordenaPorGrau(int[] W) {
+
+        for (int i = 0; i < W.length - 1; i++) {
+
+            for (int j = i + 1; j < W.length; j++) {
+
+                // Compara os graus dos vertices
+                if (grau(W[j]) > grau(W[i])) {
+
+                    // Troca os vertices de posicao
+                    int aux = W[i];
+                    W[i] = W[j];
+                    W[j] = aux;
+                }
+            }
+        }
+    }
+
+    // Calcula o grau de cada vértice
+    private int grau(int v) {
+        int grau = 0;
+        TNo no = adj[v];
+
+        while (no != null) {
+            grau++;
+            no = no.prox;
+        }
+
+        return grau;
+    }
+
+    private boolean temVerticeNaoColorido(int[] W) {
+        for (int i = 0; i < W.length; i++) {
+            if (W[i] != -1) { // W recebe -1 para cada valor lido
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean ehAdjacente(int v, TColoracao C, int k) {
+        TNo no = adj[v];
+        TNoColoracao noCor = C.getCores(k);
+
+        while (no != null) {
+            TNoColoracao atual = noCor;
+            while (atual != null) {
+                if (no.w == atual.vertice) {
+                    return true;
+                }
+                atual = atual.prox;
+            }
+            no = no.prox;
+        }
+        return false;
     }
 
     // Construir lista com base no grafo.txt
@@ -609,16 +736,15 @@ public class TGrafo {
 
                     verticesLidos++;
 
-                 } else if (M == -1) {
+                } else if (M == -1) {
 
-                     // Logo após os vértices vem a linha com o número de arestas (m)
-                     M = Integer.parseInt(linha.trim()); 
+                    // Logo após os vértices vem a linha com o número de arestas (m)
+                    M = Integer.parseInt(linha.trim()); 
 
                 } else if (arestasLidas < M) {
-
-                     // Linha de aresta no formato "v w" (o peso é calculado via Haversine
-                     // a partir das coordenadas dos vértices, não é lido do arquivo)
-
+                    // Linha de aresta no formato "v w" (o peso é calculado via Haversine
+                    // a partir das coordenadas dos vértices, não é lido do arquivo)
+                    
                     String[] valores = linha.trim().split("\\s+");
                     int v = Integer.parseInt(valores[0]);
                     int w = Integer.parseInt(valores[1]);

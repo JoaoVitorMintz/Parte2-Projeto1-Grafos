@@ -43,14 +43,13 @@ public class Menu {
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
-        // TGrafo grafo = null;
-        TGrafoD grafo = null;
+        TGrafo grafo = null;
         int resp;
 
         while (true) {
 
             System.out.println("\n===== MENU ====="); 
-            System.out.println("1 - Ler dados de grafo*.txt");
+            System.out.println("1 - Ler dados de grafo.txt");
             System.out.println("2 - Gravar dados no arquivo grafo.txt"); 
             System.out.println("3 - Inserir vértice"); 
             System.out.println("4 - Remover vértice"); 
@@ -59,8 +58,10 @@ public class Menu {
             System.out.println("7 - Mostrar grafo"); 
             System.out.println("8 - Inserir aresta");
             System.out.println("9 - Apresentar conexidade do grafo e o reduzido");
-            System.out.println("10 - Apresentar o caminho mínimo para o grafo");
-            System.out.println("11 - Encerrar aplicação");
+            System.out.println("10 - Apresentar o caminho mínimo para o grafo (Dijkstra)");
+            System.out.println("11 - Apresentar coloracao de vértice do grafo (Classe)");
+            System.out.println("12 - <Insira_Algoritmo_Aqui>");
+            System.out.println("13 - Encerrar aplicação");
             System.out.print("Insira sua opção: ");
 
             try{
@@ -69,9 +70,8 @@ public class Menu {
             switch (resp) {
                 case 1:
                     // Ler dados de grafo.txt
-                    System.out.println("\nLendo dados de 'grafo3.txt'");
-                    // grafo = TGrafoD.buildGraph("grafo2.txt");
-                    grafo = TGrafoD.buildGraph("grafo3.txt");
+                    System.out.println("\nLendo dados de 'grafo.txt'");
+                    grafo = TGrafo.buildGraph("grafo.txt");
                     System.out.print("Leitura completa!");
                     break;
                 case 2:
@@ -173,15 +173,28 @@ public class Menu {
                     if (grafo == null) {
                         System.out.println("Deve-se primeiro carregar um grafo.");
                     } else {
-                        System.out.print("Insira o vértice de ORIGEM: ");
-                        int origem = sc.nextInt();
-                        System.out.print("Insira o vértice de DESTINO (ou -1 para calcular até todos): ");
-                        int destino = sc.nextInt();
-
-                        grafo.dijkstra(origem, destino);
+                        grafo.dijkstra(0, -1);
                     }
                     break;
                 case 11:
+                    // Algoritmo de Coloração
+                    System.out.println("\n=== Algoritmo de Coloracao por Classe ===");
+                    if (grafo == null) {
+                        System.out.println("Deve-se primeiro carregar um grafo.");
+                    } else {
+                        grafo.coloracao_classe();
+                    }
+                    break;
+                case 12:
+                    // Algoritmo de Coloração
+                    System.out.println("\n=== Algoritmo de ===");
+                    if (grafo == null) {
+                        System.out.println("Deve-se primeiro carregar um grafo.");
+                    } else {
+                        break; // inserir algoritmo aqui
+                    }
+                    break;
+                case 13:
                     System.out.println("\nEncerrando aplicação.");
                     sc.close();
                     return;
