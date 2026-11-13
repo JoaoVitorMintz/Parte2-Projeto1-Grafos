@@ -53,6 +53,8 @@ indicado no arquivo, pega por uma API de geolocalização a latitude e longitude
 
 10/11 - João Vitor Garcia Aguiar Mintz - Corrigindo grafo.txt para ter as arestas e vértices corrigidos + inserção do código correto 
 de coloração em TGrafo + adição do Dijkstra e do coloração no menu, ainda falta um algoritmo e corrigir o HTML
+
+13/11 - Giovanni Castro - Aplicação de Busca em Profundidade (DFS)
 */
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -471,6 +473,74 @@ public class TGrafo {
             }
         }
         System.out.println("Nota: As categorias (C0-C3) e o Grafo Reduzido via FCONEX aplicam-se a grafos direcionados.");
+    }
+
+    // Busca em Profundidade (DFS)
+    // Marca o vértice ao desempilhar, para respeitar a ordem de visita da DFS.
+    public void buscaEmProfundidade(int origem) {
+        if (origem < 0 || origem >= n) {
+            System.out.println("Vértice de origem inválido!");
+            return;
+        }
+
+        boolean[] visitado = new boolean[n];
+        int[] pai = new int[n];
+        int[] ordem = new int[n];
+        int qtdVisitados = 0;
+
+        for (int i = 0; i < n; i++) {
+            pai[i] = -1;
+        }
+
+        // Cada aresta pode ser empilhada no máximo duas vezes
+        Pilha pilha = new Pilha(2 * m + n + 1);
+        pilha.push(origem);
+
+        while (!pilha.isEmpty()) {
+            int u = pilha.pop();
+
+            if (visitado[u]) {
+                continue; // já foi visitado
+            }
+
+            visitado[u] = true;
+            ordem[qtdVisitados++] = u;
+
+            // Guarda os vizinhos não visitados em um vetor para empilhar em ordem inversa,
+            // assim o menor índice é o primeiro a ser desempilhado
+            int[] vizinhos = new int[grau(u)];
+            int qtdViz = 0;
+            TNo no = adj[u];
+            while (no != null) {
+                if (!visitado[no.w]) {
+                    vizinhos[qtdViz++] = no.w;
+                }
+                no = no.prox;
+            }
+
+            for (int i = qtdViz - 1; i >= 0; i--) {
+                pai[vizinhos[i]] = u; // o último a empilhar é quem será considerado pai
+                pilha.push(vizinhos[i]);
+            }
+        }
+
+        System.out.println("\n=== RESULTADO DA BUSCA EM PROFUNDIDADE (DFS) ===");
+        System.out.println("Origem: " + origem + " (" + (rotulo[origem] != null ? rotulo[origem] : "Sem rótulo") + ")");
+        System.out.println("Ordem de visita:");
+
+        for (int i = 0; i < qtdVisitados; i++) {
+            int v = ordem[i];
+            String r = (rotulo[v] != null) ? rotulo[v] : "Sem rótulo";
+            String origemVisita = (pai[v] == -1) ? "origem" : "pai: " + pai[v];
+            System.out.println((i + 1) + "º -> v" + v + " (" + r + ") [" + origemVisita + "]");
+        }
+
+        System.out.println("\nVértices alcançados: " + qtdVisitados + " de " + n);
+        if (qtdVisitados < n) {
+            System.out.println("Vértices inalcançáveis a partir da origem (outras componentes): " + (n - qtdVisitados));
+        } else {
+            System.out.println("Todos os vértices foram alcançados (grafo conexo).");
+        }
     }
 
     // Resultado estruturado do Dijkstra, para outras partes do projeto reutilizarem o cálculo.

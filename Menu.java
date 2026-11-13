@@ -35,6 +35,8 @@ aresta, gravarArquivo escreve o peso, buildGraph lê o peso do arquivo em vez de
 
 27/09 - João Vitor Garcia Aguiar Mintz - Testes realizados, validação do código
 28/09 - Yan Andreotti dos Santos - Envio do relatório dentro do github deste projeto do bimestre
+
+13/11 - Adição do Menu para os testes
 */
 import java.util.InputMismatchException;
 import java.util.Scanner;
@@ -60,7 +62,7 @@ public class Menu {
             System.out.println("9 - Apresentar conexidade do grafo e o reduzido");
             System.out.println("10 - Apresentar o caminho mínimo para o grafo (Dijkstra)");
             System.out.println("11 - Apresentar coloracao de vértice do grafo (Classe)");
-            System.out.println("12 - <Insira_Algoritmo_Aqui>");
+            System.out.println("12 - Aplicar a Busca em Profundidade");
             System.out.println("13 - Encerrar aplicação");
             System.out.print("Insira sua opção: ");
 
@@ -186,12 +188,14 @@ public class Menu {
                     }
                     break;
                 case 12:
-                    // Algoritmo de Coloração
-                    System.out.println("\n=== Algoritmo de ===");
+                    // Busca em Profundidade (DFS)
+                    System.out.println("\n=== Busca em Profundidade (DFS) ===");
                     if (grafo == null) {
                         System.out.println("Deve-se primeiro carregar um grafo.");
                     } else {
-                        break; // inserir algoritmo aqui
+                        System.out.print("Insira o vértice de origem: ");
+                        int origem = sc.nextInt();
+                        grafo.buscaEmProfundidade(origem);
                     }
                     break;
                 case 13:
