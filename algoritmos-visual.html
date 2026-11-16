@@ -44,6 +44,11 @@ svg.grabbing{cursor:grabbing}
 .edge.tree{stroke:#94a3b8;stroke-width:1.5;opacity:.8}
 .edge.neighbor{stroke:#475569;stroke-width:1.8;opacity:.9}
 .edge.path{stroke:#2563eb;stroke-width:3.4;opacity:1}
+.edge.dfs{stroke:#059669;stroke-width:3;opacity:1}
+.dfs-controls{display:flex;gap:8px;align-items:center;margin-top:10px}
+.dfs-controls input{min-width:0;flex:1;accent-color:#059669}
+.dfs-controls button{padding:7px 10px}
+[hidden]{display:none!important}
 .node{stroke:white;stroke-width:1.8;cursor:pointer;vector-effect:non-scaling-stroke}
 .node.source{stroke:#7c3aed;stroke-width:3}
 .node.nb{stroke:#111827;stroke-width:2}
@@ -105,11 +110,11 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
 <body>
 <main>
   <h1>Visualização do grafo do AcolheSP</h1>
-  <p class="sub">Mostra os vértices e as arestas retornados pelo backend, a coloração gulosa e os caminhos calculados por Dijkstra.</p>
+  <p class="sub">Mostra os vértices e as arestas retornados pelo backend, a coloração gulosa, os caminhos de Dijkstra e a busca em profundidade (DFS).</p>
   <section class="panel">
     <div class="controls">
-      <div class="field"><label for="lat">Latitude da origem</label><input id="lat" type="number" step="any" value="-23.5505"></div>
-      <div class="field"><label for="lng">Longitude da origem</label><input id="lng" type="number" step="any" value="-46.6333"></div>
+      <div class="field"><label for="lat">Latitude da origem</label><input id="lat" type="number" step="any" value="-23.5481237"></div>
+      <div class="field"><label for="lng">Longitude da origem</label><input id="lng" type="number" step="any" value="-46.6504377"></div>
       <button id="geo" class="button secondary">Usar minha localização</button>
       <button id="load" class="button">Construir grafo</button>
     </div>
@@ -118,7 +123,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
       <div class="stat"><strong id="nVertices">—</strong><span>vértices</span></div>
       <div class="stat"><strong id="nArestas">—</strong><span>arestas</span></div>
       <div class="stat"><strong id="nCores">—</strong><span>cores usadas</span></div>
-      <div class="stat"><strong id="nReachable">—</strong><span>abrigos alcançáveis</span></div>
+      <div class="stat"><strong id="nReachable">—</strong><span id="reachableLabel">abrigos alcançáveis</span></div>
     </div>
   </section>
   <div class="layout">
@@ -134,6 +139,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
             <button class="active" data-mode="grafo">Grafo completo</button>
             <button data-mode="coloracao">Coloração</button>
             <button data-mode="dijkstra">Dijkstra</button>
+            <button data-mode="dfs">Busca em profundidade (DFS)</button>
           </div>
           <button id="fullscreenMap" type="button" class="button secondary" aria-pressed="false">⛶ Tela cheia do mapa</button>
         </div>
@@ -154,14 +160,26 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
         <label class="toggle"><input id="showAllEdges" type="checkbox" checked> Mostrar todas as arestas</label>
       </div>
       <p class="note" id="description">Clique em um vértice ou em um abrigo da lista para destacar suas conexões. Role para dar zoom e arraste para mover. No mapa, passe o mouse numa aresta para ver a distância em km.</p>
-      <div class="warning"><b>Mapa real:</b> cada abrigo fica na coordenada verdadeira e todas as arestas retornadas pelo backend são desenhadas (abrigos sem coordenada não aparecem no mapa). Clique em um abrigo para destacar todas as conexões dele; no <b>Dijkstra</b> o caminho mínimo até o destino fica em azul por cima das demais arestas. <b>Diagrama:</b> redesenha o grafo sem usar a posição real, só pra enxergar a estrutura (por padrão com um resumo das arestas). Se a API retornar 0 arestas, a causa está no grafo construído pelo backend, não no HTML.</div>
+      <div class="warning"><b>Mapa real:</b> cada abrigo fica na coordenada verdadeira e todas as arestas retornadas pelo backend são desenhadas (abrigos sem coordenada não aparecem no mapa). Clique em um abrigo para destacar todas as conexões dele; no <b>Dijkstra</b> o caminho mínimo até o destino fica em azul por cima das demais arestas. <b>DFS:</b> mostra a árvore de busca e a ordem de visita a partir do vértice escolhido; não calcula o caminho mínimo. <b>Diagrama:</b> redesenha o grafo sem usar a posição real, só pra enxergar a estrutura (por padrão com um resumo das arestas). Se a API retornar 0 arestas, a causa está no grafo construído pelo backend, não no HTML.</div>
     </section>
     <aside class="side">
-      <section class="panel">
+      <section class="panel" id="dijkstraPanel">
         <h2>Inspecionar Dijkstra</h2>
         <label class="field" for="target">Abrigo de destino</label>
         <select id="target" class="select" disabled><option>Carregue o grafo primeiro</option></select>
         <div id="pathInfo" class="pathBox">Selecione um destino para destacar o caminho mínimo encontrado.</div>
+      </section>
+      <section class="panel" id="dfsPanel" hidden>
+        <h2>Inspecionar DFS</h2>
+        <label for="dfsStart">Vértice inicial</label>
+        <select id="dfsStart" class="select" disabled><option>Carregue o grafo primeiro</option></select>
+        <div class="dfs-controls">
+          <button id="dfsPrev" type="button" class="button secondary" aria-label="Passo anterior da DFS">−</button>
+          <input id="dfsStep" type="range" min="0" max="0" value="0" aria-label="Quantidade de vértices visitados na DFS" disabled>
+          <button id="dfsNext" type="button" class="button secondary" aria-label="Próximo passo da DFS">+</button>
+        </div>
+        <div id="dfsInfo" class="pathBox" role="status" aria-live="polite">Carregue o grafo para iniciar a busca.</div>
+        <p class="note">Vizinhos em ordem crescente de índice, como no TGrafo.java. DFS usa as conexões, sem considerar os pesos. U representa o vértice 0; os números dos abrigos correspondem ao grafo.txt.</p>
       </section>
       <section class="panel">
         <h2 id="listTitle">Vértices do grafo</h2>
@@ -180,6 +198,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  const BASE_W = 1200, BASE_H = 900;
 
  let data = null, mode = 'grafo', selectedId = null;
+ let dfsResult = null, dfsShown = new Set(), dfsCurrent = null;
  let vmap = new Map(), idx = new Map(), adj = [], allEdgesCache = null, edgeW = null;
  let layouts = {}, curPos = null, curLayout = null;
  let activePath = new Set(), pathPairsCache = [];
@@ -201,8 +220,8 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  const hasCoord = v => v && v.latitude != null && v.longitude != null && v.latitude !== '' && v.longitude !== '' && Number.isFinite(+v.latitude) && Number.isFinite(+v.longitude);
  const getVertex = id => id == null ? undefined : vmap.get(key(id));
  const targetVertex = () => { const id = $('target').value; return id === '__nearest__' ? nearestShelter() : getVertex(id); };
- const shortIdOf = v => v.origem ? 'U' : String(v.id).replace(/^abrigo-/, '');
- const fillFor = (v,active) => mode==='coloracao'?colorFor(v.cor):mode==='dijkstra'?(v.origem?'#7c3aed':active?'#2563eb':(v.distanciaKm==null?'#a3b0c3':'#8793a5')):(v.origem?'#7c3aed':'#64748b');
+ const shortIdOf = v => v.origem ? 'U' : (/^abrigo-\d+$/.test(String(v.id)) ? String(Number(String(v.id).slice(7)) + 1) : String(v.id));
+ const fillFor = (v,active) => mode==='dfs'?(idx.get(key(v.id))===dfsCurrent?'#d97706':idx.get(key(v.id))===dfsResult?.origem?'#7c3aed':dfsShown.has(idx.get(key(v.id)))?'#059669':'#a3b0c3'):mode==='coloracao'?colorFor(v.cor):mode==='dijkstra'?(v.origem?'#7c3aed':active?'#2563eb':(v.distanciaKm==null?'#a3b0c3':'#8793a5')):(v.origem?'#7c3aed':'#64748b');
  function haversineKm(lat1,lng1,lat2,lng2){
    const R=6371, rad=Math.PI/180, dLat=(lat2-lat1)*rad, dLng=(lng2-lng1)*rad;
    const a=Math.sin(dLat/2)**2+Math.cos(lat1*rad)*Math.cos(lat2*rad)*Math.sin(dLng/2)**2;
@@ -231,7 +250,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  }
  function highlightedVertexId(){
    if(selectedId!=null)return selectedId;
-   if(mode!=='coloracao'&&$('target').value==='__nearest__')return nearestShelter()?.id??null;
+   if(mode!=='coloracao'&&mode!=='dfs'&&$('target').value==='__nearest__')return nearestShelter()?.id??null;
    return null;
  }
  function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -239,6 +258,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  /* ---------- preparação dos dados ---------- */
  function prepare(){
    vmap = new Map(); idx = new Map(); allEdgesCache = null; edgeW = null; mapEdgesBuilt = false; layouts = {}; curPos = null; curLayout = null;
+   dfsResult=null;dfsShown=new Set();dfsCurrent=null;
    data.vertices.forEach((v,i)=>{vmap.set(key(v.id),v);idx.set(key(v.id),i);});
    adj = data.vertices.map(()=>[]);
    for(const e of data.arestas){
@@ -247,6 +267,47 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
      const w=Number(e.distanciaKm), ww=Number.isFinite(w)?w:1;
      adj[a].push({j:b,w:ww}); adj[b].push({j:a,w:ww});
    }
+   adj.forEach(vizinhos=>vizinhos.sort((a,b)=>a.j-b.j));
+ }
+
+ /* ---------- DFS: mesma ordem da pilha usada em TGrafo.buscaEmProfundidade ---------- */
+ function calcularDFS(adjacencia, origem){
+   const n=adjacencia.length,ordem=[],pais=new Array(n).fill(-1),visitado=new Array(n).fill(false);
+   if(!Number.isInteger(origem)||origem<0||origem>=n)return {origem,ordem,pais};
+   const pilha=[origem];
+   while(pilha.length){
+     const u=pilha.pop();
+     if(visitado[u])continue;
+     visitado[u]=true;ordem.push(u);
+     const vizinhos=adjacencia[u].filter(p=>!visitado[p.j]).map(p=>p.j).sort((a,b)=>a-b);
+     for(let i=vizinhos.length-1;i>=0;i--){pais[vizinhos[i]]=u;pilha.push(vizinhos[i]);}
+   }
+   return {origem,ordem,pais};
+ }
+ function updateDFS(){
+   if(!data)return;
+   const origem=idx.get(key($('dfsStart').value));
+   if(!dfsResult||dfsResult.origem!==origem){
+     dfsResult=calcularDFS(adj,origem);
+     $('dfsStep').max=String(dfsResult.ordem.length);$('dfsStep').value=String(dfsResult.ordem.length);
+   }
+   const passo=Math.max(0,Math.min(Number($('dfsStep').value),dfsResult.ordem.length));
+   dfsShown=new Set(dfsResult.ordem.slice(0,passo));dfsCurrent=passo?dfsResult.ordem[passo-1]:null;
+   $('dfsPrev').disabled=passo===0;$('dfsNext').disabled=passo>=dfsResult.ordem.length;
+   const inicio=data.vertices[dfsResult.origem],atual=dfsCurrent==null?null:data.vertices[dfsCurrent];
+   $('dfsInfo').textContent=inicio?`Início: ${shortIdOf(inicio)} — ${inicio.nome}. Passo ${passo} de ${dfsResult.ordem.length}. ${atual?'Atual: '+shortIdOf(atual)+' — '+atual.nome+'. ':'Nenhum vértice visitado ainda. '}${dfsResult.ordem.length} de ${data.vertices.length} vértices alcançáveis; ${data.vertices.length-dfsResult.ordem.length} em outras componentes.`:'Nenhum vértice disponível.';
+ }
+ function dfsTreeEdges(){
+   if(!dfsResult)return [];
+   return dfsResult.ordem.filter(v=>dfsShown.has(v)&&dfsResult.pais[v]>=0&&dfsShown.has(dfsResult.pais[v]))
+     .map(v=>[dfsResult.pais[v],v,weightOf(dfsResult.pais[v],v)]);
+ }
+ function fillDFSOrigins(){
+   const start=$('dfsStart'),origem=data.vertices.find(v=>v.origem)||data.vertices[0];
+   start.innerHTML=data.vertices.map(v=>`<option value="${escapeHtml(v.id)}">${escapeHtml(shortIdOf(v))} — ${escapeHtml(v.nome)}</option>`).join('');
+   start.disabled=!data.vertices.length;$('dfsStep').disabled=!data.vertices.length;
+   if(origem)start.value=String(origem.id);
+   dfsResult=null;updateDFS();
  }
  function allEdges(){
    if(allEdgesCache)return allEdgesCache;
@@ -489,7 +550,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
    L.bounds={x0,y0,x1,y1};
    return L;
  }
- function getLayout(m){if(!layouts[m])layouts[m]=m==='coloracao'?layoutCores():m==='dijkstra'?layoutRadial():layoutGrafo();return layouts[m];}
+ function getLayout(m){if(m==='dfs')return getLayout('grafo');if(!layouts[m])layouts[m]=m==='coloracao'?layoutCores():m==='dijkstra'?layoutRadial():layoutGrafo();return layouts[m];}
 
  /* ---------- vista (zoom / pan) do diagrama ---------- */
  function fitView(b){
@@ -514,10 +575,10 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  /* ---------- desenho ---------- */
  function decoSvg(deco){return deco.map(o=>{if(o.k==='halo')return `<circle class="halo" cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${o.r.toFixed(1)}" style="fill:${o.color};stroke:${o.color}"/>`;if(o.k==='ring')return `<circle class="ring" cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="${o.r.toFixed(1)}"/>`;return `<text class="deco-label" x="${o.x.toFixed(1)}" y="${o.y.toFixed(1)}">${escapeHtml(o.text)}</text>`;}).join('');}
  function edgesToDraw(L){
-   const showAll=$('showAllEdges').checked, focus=$('focusEdges').checked&&mode!=='dijkstra';
+   const showAll=$('showAllEdges').checked, focus=$('focusEdges').checked&&mode==='grafo';
    const layers=[]; if(showAll)layers.push({cls:'edge faint',list:allEdges()});layers.push({cls:L.baseCls,list:L.baseEdges});
    const highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId));if(focus&&si!=null)layers.push({cls:'edge neighbor',list:adj[si].map(p=>[si,p.j,p.w])});
-   if(mode==='dijkstra'&&pathPairsCache.length)layers.push({cls:'edge path',list:pathPairsCache.map(([a,b])=>[a,b,weightOf(a,b)]),labels:true});return layers;
+   if(mode==='dijkstra'&&pathPairsCache.length)layers.push({cls:'edge path',list:pathPairsCache.map(([a,b])=>[a,b,weightOf(a,b)]),labels:true});if(mode==='dfs')layers.push({cls:'edge dfs',list:dfsTreeEdges()});return layers;
  }
  function drawGraph(P,L,withDeco){
    const vs=data.vertices,highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId)),focus=$('focusEdges').checked&&si!=null&&mode==='grafo';
@@ -528,15 +589,19 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
    graph.innerHTML=s;
  }
  function renderSide(){
-   if(!data)return;const Ly=curLayout,onMap=viewType==='mapa',missing=data.vertices.filter(v=>!hasCoord(v)).length;let h;
+   if(!data)return;
+   $('dfsPanel').hidden=mode!=='dfs';$('dijkstraPanel').hidden=mode==='dfs';
+   $('nReachable').textContent=mode==='dfs'?dfsResult.ordem.length:data.vertices.filter(v=>!v.origem&&v.distanciaKm!=null).length;
+   $('reachableLabel').textContent=mode==='dfs'?'vértices alcançáveis pela DFS':'abrigos alcançáveis';const Ly=curLayout,onMap=viewType==='mapa',missing=data.vertices.filter(v=>!hasCoord(v)).length;let h;
    if(mode==='coloracao')h=(data.gruposColoracao||[]).map(g=>`<span class="chip"><span class="colorDot" style="background:${colorFor(g.cor)}"></span>Cor ${g.cor}: ${g.vertices.length}</span>`).join('');
+   else if(mode==='dfs')h=`<span class="chip">DFS: ${dfsResult.ordem.length} alcançáveis</span><span class="chip">Verde: visitados</span><span class="chip">Laranja: passo atual</span><span class="chip">Cinza: não visitados neste passo</span><span class="chip">Arestas verdes: árvore DFS</span>`;
    else if(mode==='dijkstra'){h='<span class="chip"><span class="colorDot" style="background:#2563eb"></span>Caminho selecionado</span><span class="chip"><span class="colorDot" style="background:#7c3aed"></span>Origem</span>';if(!onMap)h+=(Ly?.meta?.rings||[]).map(r=>`<span class="chip">${r.d}º salto: ${r.count} abrigo${r.count>1?'s':''} · até ${r.maxKm.toFixed(1)} km</span>`).join('');const lost=onMap?data.vertices.filter(v=>!v.origem&&v.distanciaKm==null).length:(Ly?.meta?.lost||0);if(lost)h+=`<span class="chip"><span class="colorDot" style="background:#a3b0c3"></span>Sem caminho: ${lost}</span>`;}
    else h=`<span class="chip">Origem: roxo</span><span class="chip">Arestas no backend: ${data.arestas.length}</span>`+(onMap?'<span class="chip">Passe o mouse numa aresta para ver os km</span>':`<span class="chip">Mostradas no resumo: ${Ly?.meta?.shown??0}</span>`)+'<span class="chip">Clique em um vértice para ver todas as conexões dele</span>';
    if(onMap&&missing)h+=`<span class="chip">${missing} sem coordenada (fora do mapa)</span>`;$('legend').innerHTML=h;renderResults();renderPathInfo();
  }
- function render(){if(!data)return;if(viewType==='mapa'){renderMap();renderSide();return;}curLayout=getLayout(mode);if(!curPos)curPos=curLayout.pos;computePath();drawGraph(curPos,curLayout,true);renderSide();}
+ function render(){if(!data)return;if(mode==='dfs')updateDFS();if(viewType==='mapa'){renderMap();renderSide();return;}curLayout=getLayout(mode);if(!curPos)curPos=curLayout.pos;computePath();drawGraph(curPos,curLayout,true);renderSide();}
  function switchMode(next){
-   if(!data||viewType==='mapa'){mode=next;if(data)render();return;}const oldPos=curPos,oldView={...view};mode=next;const L=getLayout(mode);curLayout=L;computePath();const target=fitView(L.bounds);baseView=target;
+   if(!data||viewType==='mapa'){mode=next;if(data)render();return;}const oldPos=curPos,oldView={...view};mode=next;if(mode==='dfs')updateDFS();const L=getLayout(mode);curLayout=L;computePath();const target=fitView(L.bounds);baseView=target;
    const cost=L.baseEdges.length+($('showAllEdges').checked?allEdges().length:0),reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches,my=++tweenId;
    if(!oldPos||oldPos.length!==L.pos.length||cost>700||reduce||typeof requestAnimationFrame!=='function'){curPos=L.pos;view=target;applyView();render();return;}
    renderSide();const t0=performance.now(),D=480;const step=now=>{if(my!==tweenId)return;const t=Math.min(1,(now-t0)/D),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const P=L.pos.map((p,i)=>{const o=oldPos[i]||p;return{x:o.x+(p.x-o.x)*e,y:o.y+(p.y-o.y)*e};});view={x:oldView.x+(target.x-oldView.x)*e,y:oldView.y+(target.y-oldView.y)*e,w:oldView.w+(target.w-oldView.w)*e,h:oldView.h+(target.h-oldView.h)*e};applyView();if(t<1){drawGraph(P,L,false);requestAnimationFrame(step);}else{curPos=L.pos;view=target;applyView();render();}};requestAnimationFrame(step);
@@ -570,6 +635,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
    const vs=data.vertices,highlightId=highlightedVertexId(),si=highlightId==null?null:idx.get(key(highlightId)),focus=$('focusEdges').checked&&si!=null&&mode==='grafo',nbr=new Set();if(focus)adj[si].forEach(p=>nbr.add(p.j));
    if(focus)for(const p of adj[si]){const A=vs[si],B=vs[p.j];if(hasCoord(A)&&hasCoord(B))Lf.polyline([ll(A),ll(B)],{color:'#111827',weight:3,opacity:.85,interactive:false}).addTo(dynLayer);}
    if(mode==='dijkstra')for(const [a,b] of pathPairsCache){const A=vs[a],B=vs[b];if(!hasCoord(A)||!hasCoord(B))continue;Lf.polyline([ll(A),ll(B)],{color:'#2563eb',weight:6,opacity:1,interactive:false}).addTo(dynLayer);const w=weightOf(a,b);if(w!=null)Lf.tooltip({permanent:true,direction:'center',className:'kmtip',interactive:false}).setLatLng([(+A.latitude+ +B.latitude)/2,(+A.longitude+ +B.longitude)/2]).setContent(`${w.toFixed(1)} km`).addTo(dynLayer);}
+   if(mode==='dfs')for(const [a,b] of dfsTreeEdges()){const A=vs[a],B=vs[b];if(hasCoord(A)&&hasCoord(B))Lf.polyline([ll(A),ll(B)],{color:'#059669',weight:4,opacity:.95,interactive:false}).addTo(dynLayer);}
    const showNums=$('showLabels').checked,dimOn=focus&&mode==='grafo';
    vs.forEach((v,i)=>{if(!hasCoord(v))return;const active=mode==='dijkstra'&&activePath.has(i),isSel=si===i,isNb=nbr.has(i),sid=shortIdOf(v),cls='pin'+(v.origem?' src':'')+(isSel?' sel':isNb?' nb':'')+(dimOn&&!isSel&&!isNb&&!v.origem?' dim':'');const icon=Lf.divIcon({className:'pinwrap',html:`<div class="${cls}" style="background:${fillFor(v,active)}">${showNums||v.origem?escapeHtml(sid):''}</div>`,iconSize:[24,24],iconAnchor:[12,12]});Lf.marker(ll(v),{icon,zIndexOffset:isSel?1000:v.origem?900:active?600:isNb?300:0,riseOnHover:true}).bindTooltip(`${escapeHtml(v.nome)}${v.origem?' · origem':` · ID ${escapeHtml(sid)} · ${escapeHtml(fmt(v.distanciaKm))} desde a origem · Cor ${v.cor}`}`,{direction:'top',offset:[0,-12]}).on('click',()=>select(v.id)).addTo(dynLayer);});
  }
@@ -583,7 +649,13 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  /* ---------- painéis laterais ---------- */
  function renderResults(){
    if(!data)return;const area=$('results');
-   if(mode==='coloracao'){$('listTitle').textContent='Classes de coloração';area.innerHTML=(data.gruposColoracao||[]).map(g=>`<div class="item"><strong><span class="colorDot" style="background:${colorFor(g.cor)}"></span>Cor ${g.cor} (${g.vertices.length})</strong><div class="muted">${g.vertices.map(id=>escapeHtml(getVertex(id)?.nome||id)).join(' · ')}</div></div>`).join('')||'<div class="empty">Nenhuma classe retornada.</div>';}
+   if(mode==='dfs'){
+     $('listTitle').textContent='DFS — ordem de visita';
+     area.innerHTML=dfsResult.ordem.map((i,k)=>{const v=data.vertices[i],pai=dfsResult.pais[i];return `<div class="item" data-select="${escapeHtml(v.id)}"><strong>${k+1}º · ${escapeHtml(shortIdOf(v))} — ${escapeHtml(v.nome)}</strong><div class="muted">${pai<0?'Início da busca':'Pai: '+escapeHtml(shortIdOf(data.vertices[pai]))} · ${dfsShown.has(i)?'visitado':'aguardando próximo passo'}</div></div>`;}).join('')||'<div class="empty">Nenhum vértice alcançável.</div>';
+     const lost=data.vertices.filter((v,i)=>!dfsResult.ordem.includes(i));
+     if(lost.length)area.innerHTML+=`<div class="warning">Fora da componente inicial: ${lost.map(v=>escapeHtml(shortIdOf(v))+' — '+escapeHtml(v.nome)).join(' · ')}</div>`;
+   }
+   else if(mode==='coloracao'){$('listTitle').textContent='Classes de coloração';area.innerHTML=(data.gruposColoracao||[]).map(g=>`<div class="item"><strong><span class="colorDot" style="background:${colorFor(g.cor)}"></span>Cor ${g.cor} (${g.vertices.length})</strong><div class="muted">${g.vertices.map(id=>escapeHtml(getVertex(id)?.nome||id)).join(' · ')}</div></div>`).join('')||'<div class="empty">Nenhuma classe retornada.</div>';}
    else if(mode==='dijkstra'){
      if($('target').value==='__nearest__'){$('listTitle').textContent='Abrigos mais próximos (linha reta)';area.innerHTML=data.vertices.filter(v=>!v.origem).map(v=>({v,d:directDistance(v)})).sort((a,b)=>a.d-b.d).map(({v,d})=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${escapeHtml(v.nome)}</strong><div class="muted">Distância em linha reta: ${Number.isFinite(d)?d.toFixed(2)+' km':'sem coordenadas'}</div></div>`).join('')||'<div class="empty">Nenhum abrigo com localização.</div>';}
      else{$('listTitle').textContent='Distâncias desde a origem';area.innerHTML=data.vertices.filter(v=>!v.origem).slice().sort((a,b)=>(a.distanciaKm??Infinity)-(b.distanciaKm??Infinity)).map(v=>`<div class="item" data-select="${escapeHtml(v.id)}"><strong>${escapeHtml(v.nome)}</strong><div class="muted">Distância no grafo: ${escapeHtml(fmt(v.distanciaKm))}</div></div>`).join('')||'<div class="empty">Nenhum abrigo com localização.</div>';}
@@ -596,6 +668,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
    area.querySelectorAll('[data-select]').forEach(el=>el.addEventListener('click',()=>{const id=el.getAttribute('data-select');selectedId=id;if(mode==='dijkstra')$('target').value=id;render();}));
  }
  function renderPathInfo(){
+   if(mode==='dfs')return;
    const v=targetVertex();
    if($('target').value==='__nearest__'){
      if(!v){$('pathInfo').textContent='Não encontrei abrigos com coordenadas válidas para calcular o mais próximo.';return;}
@@ -617,17 +690,18 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  async function load(){
    const lat=Number($('lat').value),lng=Number($('lng').value);
    if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<-90||lat>90||lng<-180||lng>180){$('status').className='status error';$('status').textContent='Informe latitude entre -90 e 90 e longitude entre -180 e 180.';return;}
+   if($('lat').value.trim()===''||$('lng').value.trim()===''){$('status').className='status error';$('status').textContent='Preencha a latitude e a longitude da origem.';return;}
    const b=$('load');b.disabled=true;b.textContent='Construindo…';$('status').className='status';$('status').textContent='Consultando o endpoint do backend…';
    try{
      const resp=await fetch(`/api/local/grafo?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,{headers:{Accept:'application/json'}});
      if(!resp.ok){const body=await resp.text();throw new Error(`HTTP ${resp.status}: ${body.slice(0,300)}`);}
      data=await resp.json();if(!Array.isArray(data.vertices)||!Array.isArray(data.arestas))throw new Error('A resposta da API não contém as listas vertices e arestas esperadas.');
      prepare();$('nVertices').textContent=data.vertices.length;$('nArestas').textContent=data.arestas.length;$('nCores').textContent=data.quantidadeCores??(data.gruposColoracao||[]).length;$('nReachable').textContent=data.vertices.filter(v=>!v.origem&&v.distanciaKm!=null).length;$('description').textContent=data.descricao||'';
-     fillTargets();selectedId=null;tweenId++;
+     fillTargets();fillDFSOrigins();selectedId=null;tweenId++;
      if(viewType==='diagrama'){curLayout=getLayout(mode);curPos=curLayout.pos;view=baseView=fitView(curLayout.bounds);applyView();}
      render();if(viewType==='mapa')fitMap();
      if(data.arestas.length===0){$('status').className='status error';$('status').textContent=`A API retornou ${data.vertices.length} vértices, mas 0 arestas. O HTML não está escondendo as conexões: o backend não as retornou. Confira se TGrafo.insereV está conectando os vizinhos e se o endpoint está usando essa versão da classe.`;}
-     else{$('status').className='status';$('status').textContent=`Grafo recebido do backend: ${data.vertices.length} vértices, ${data.arestas.length} arestas e ${$('nCores').textContent} cores. ${viewType==='mapa'?'O mapa mostra todas as arestas; clique em um abrigo para destacar as conexões dele.':'O diagrama mostra um resumo das arestas; marque “Mostrar todas as arestas” para ver tudo.'}`;}
+     else{$('status').className='status';$('status').textContent=`Grafo recebido do backend: ${data.vertices.length} vértices (${data.vertices.filter(v=>!v.origem).length} abrigos + origem), ${data.arestas.length} arestas e ${$('nCores').textContent} cores. ${viewType==='mapa'?'O mapa mostra todas as arestas; clique em um abrigo para destacar as conexões dele.':'O diagrama mostra um resumo das arestas; marque “Mostrar todas as arestas” para ver tudo.'}`;}
    }catch(e){$('status').className='status error';$('status').textContent=`Não consegui carregar o grafo. ${e.message}. Confirme que o servidor está rodando e abra ${window.location.origin}/algoritmos-visual.html.`;}
    finally{b.disabled=false;b.textContent='Construir grafo';}
  }
@@ -641,6 +715,10 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  $('fullscreenMap').addEventListener('click',()=>setMapFullscreen(!document.body.classList.contains('map-fullscreen')));
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('map-fullscreen'))setMapFullscreen(false);});
  $('load').addEventListener('click',load);
+ $('dfsStart').addEventListener('change',()=>{selectedId=null;dfsResult=null;render();});
+ $('dfsStep').addEventListener('input',()=>{if(data)render();});
+ $('dfsPrev').addEventListener('click',()=>{if(data){$('dfsStep').value=String(Math.max(0,Number($('dfsStep').value)-1));render();}});
+ $('dfsNext').addEventListener('click',()=>{if(data){$('dfsStep').value=String(Math.min(Number($('dfsStep').max),Number($('dfsStep').value)+1));render();}});
  $('target').addEventListener('change',()=>{
    if(!data)return;
    const v=targetVertex();
