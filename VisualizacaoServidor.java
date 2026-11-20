@@ -129,7 +129,17 @@ public class VisualizacaoServidor {
         }
 
         TGrafo.ResultadoDijkstra caminhos = grafo.calcularDijkstra(0);
-        ColoracaoGrafo.Resultado coloracao = ColoracaoGrafo.colorir(grafo);
+        TColoracao coloracao = grafo.calcularColoracaoPorClasse();
+        int[] coresPorVertice = new int[vertices.size()];
+        Map<Integer, List<Integer>> gruposColoracao = new LinkedHashMap<>();
+        for (int k = 0; k < coloracao.numCores; k++) {
+            List<Integer> grupo = new ArrayList<>();
+            for (TNoColoracao no = coloracao.getCores(k); no != null; no = no.prox) {
+                coresPorVertice[no.vertice] = k + 1;
+                grupo.add(no.vertice);
+            }
+            gruposColoracao.put(k + 1, grupo);
+        }
         List<TGrafo.ArestaInfo> arestas = grafo.listarArestas();
 
         StringBuilder json = new StringBuilder(64_000);
@@ -151,7 +161,7 @@ public class VisualizacaoServidor {
             int anterior = caminhos.antecessores[i];
             if (anterior >= 0 && anterior < vertices.size()) json.append(jsonString(vertices.get(anterior).id));
             else json.append("null");
-            json.append(',').append("\"cor\":").append(coloracao.cores[i]);
+            json.append(',').append("\"cor\":").append(coresPorVertice[i]);
             json.append('}');
         }
         json.append("],\"arestas\":[");
@@ -166,7 +176,7 @@ public class VisualizacaoServidor {
         }
         json.append("],\"gruposColoracao\":[");
         boolean primeiroGrupo = true;
-        for (Map.Entry<Integer, List<Integer>> grupo : coloracao.grupos.entrySet()) {
+        for (Map.Entry<Integer, List<Integer>> grupo : gruposColoracao.entrySet()) {
             if (!primeiroGrupo) json.append(',');
             primeiroGrupo = false;
             json.append("{\"cor\":").append(grupo.getKey()).append(",\"vertices\":[");
@@ -176,11 +186,12 @@ public class VisualizacaoServidor {
             }
             json.append("]}");
         }
-        json.append("],\"quantidadeCores\":").append(coloracao.quantidadeCores).append(',');
+        json.append("],\"quantidadeCores\":").append(coloracao.numCores).append(',');
         json.append("\"raioConexaoKm\":").append(RAIO_CONEXAO_KM).append(',');
         String descricao = "Grafo não direcionado; aresta criada quando a distância Haversine é de até "
                 + formatCoord(RAIO_CONEXAO_KM) + " km. Dijkstra e pesos são calculados pelo TGrafo existente; "
-                + "a coloração gulosa é calculada por ColoracaoGrafo. Distâncias são em linha reta, não por ruas."
+                + "a coloração por classes usa o mesmo algoritmo de TGrafo.coloracao_classe, com TColoracao. "
+                + "As cores exibidas são as retornadas por esse algoritmo. Distâncias são em linha reta, não por ruas."
                 + (semCoordenadas > 0 ? " " + semCoordenadas + " abrigo(s) sem coordenadas válidas foram omitidos do grafo." : "");
         campo(json, "descricao", descricao);
         json.append('}');

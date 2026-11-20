@@ -654,6 +654,15 @@ public class TGrafo {
     // Exercício Implementação de Coloração por Classe
     // Algoritmo de coloração por classe
     public void coloracao_classe() {
+        TColoracao C = calcularColoracaoPorClasse();
+
+        for (int cor = 0; cor < C.numCores; cor++) {
+            C.exibeCores(cor, this.rotulo);
+        }
+    }
+
+    // Mesmo resultado usado pelo menu e pela visualização, sem duplicar o algoritmo.
+    public TColoracao calcularColoracaoPorClasse() {
         // Criado uma classe de lista ligada para inserir conjuntos de coloração
         // Como o algoritmo é guloso, não precisa de remoção de vértice desta classe
         TColoracao C = new TColoracao(this.n);
@@ -683,7 +692,7 @@ public class TGrafo {
                 }
 
                 // Se algum vértice da classe atual k não fizer parte dos vizinhos de vi
-                if (!ehAdjacente(i, C, k)) {
+                if (!ehAdjacente(j, C, k)) {
                     C.insereVerticeCor(k, j);
                     W[i] = -1;
                 }
@@ -692,11 +701,7 @@ public class TGrafo {
         }
 
         C.numCores = k;
-
-        // Exibir o resultado da coloração
-        for (int cor = 0; cor < C.numCores; cor++) {
-            C.exibeCores(cor, this.rotulo);
-        }
+        return C;
     }
 
     // Reordena por grau (Re-rotulação) por método semelhante à selection sort

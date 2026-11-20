@@ -110,7 +110,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
 <body>
 <main>
   <h1>Visualização do grafo do AcolheSP</h1>
-  <p class="sub">Mostra os vértices e as arestas retornados pelo backend, a coloração gulosa, os caminhos de Dijkstra e a busca em profundidade (DFS).</p>
+  <p class="sub">Mostra os vértices e as arestas retornados pelo backend, a coloração por classes de TGrafo/TColoracao, os caminhos de Dijkstra e a busca em profundidade (DFS).</p>
   <section class="panel">
     <div class="controls">
       <div class="field"><label for="lat">Latitude da origem</label><input id="lat" type="number" step="any" value="-23.5481237"></div>
@@ -154,6 +154,7 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
         </div>
       </div>
       <div id="legend" class="legend"></div>
+      <div id="colorWarning" class="warning" role="status" hidden></div>
       <div class="legendBtns">
         <label class="toggle"><input id="showLabels" type="checkbox" checked> Mostrar o número de cada abrigo</label>
         <label class="toggle"><input id="focusEdges" type="checkbox" checked> Destacar o vértice selecionado e seus vizinhos</label>
@@ -590,6 +591,12 @@ body.map-fullscreen #graph,body.map-fullscreen .zoomBtns,body.map-fullscreen #le
  }
  function renderSide(){
    if(!data)return;
+   const conflitos=mode==='coloracao'?data.arestas.filter(e=>{
+     const a=getVertex(e.origemId),b=getVertex(e.destinoId);
+     return a&&b&&a.cor===b.cor;
+   }).length:0;
+   $('colorWarning').hidden=conflitos===0;
+   $('colorWarning').textContent=conflitos?`O algoritmo retornou ${conflitos} aresta(s) com vértices da mesma cor. As cores foram mantidas conforme TGrafo/TColoracao; esse resultado precisa de revisão no algoritmo.`:'';
    $('dfsPanel').hidden=mode!=='dfs';$('dijkstraPanel').hidden=mode==='dfs';
    $('nReachable').textContent=mode==='dfs'?dfsResult.ordem.length:data.vertices.filter(v=>!v.origem&&v.distanciaKm!=null).length;
    $('reachableLabel').textContent=mode==='dfs'?'vértices alcançáveis pela DFS':'abrigos alcançáveis';const Ly=curLayout,onMap=viewType==='mapa',missing=data.vertices.filter(v=>!hasCoord(v)).length;let h;
